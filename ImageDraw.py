@@ -3,39 +3,71 @@ import os
 import re
 import numpy as np
 
-from collections import Counter
-from skimage import measure,draw
-
-import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
 
 
+def ReadCoreImg(core_img_path):
+    """
+    Read pathology img by cv2
 
-def MarginPlot(img_path, label_path,case_name,label_num):
-    img_array = mpimg.imread(img_path)
-    label_array = mpimg.imread(label_path)
+    :param core_img_path: image file path of core pathology image
+    :return: img_array and case name
+    """
+
+    # Read image
+    core_img_array = cv2.imread(core_img_path)
+
+    # read case infomation
+    case_path = os.path.split(core_img_path)[-1]
+    case_name = case_path.replace('.jpg', '')
+
+    return core_img_array, case_name
+
+
+def ReadLabelingImg(annotation_img_path):
+    """
+    Read pathologist annotation img by cv2
+    :param labling_img_path: image file path of pathologist annotation img
+    :return: labeling_array, pathologist' number
+    """
+    annotation_img_array = cv2.imread(annotation_img_path)
+
+    # read case infomation
+    pathologist_num = annotation_img_path.split('\\')[4]
+
+    return annotation_img_array, pathologist_num
+
+
+
+def MarginPlot(core_img_path, annotation_img_path):
+    '''
+    Draw the margin of annotation image in core imag path
+    :param core_img_path: image file path of core pathology image
+    :param annotation_img_path: image file path of pathologist annotation img
+    :return: ax
+    '''
+    core_img_array, case_name = ReadCoreImg(core_img_path)
+    annotation_img_array, pathologist_num = ReadLabelingImg(annotation_img_path)
 
     fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 
     #show img
-    ax.imshow(img_array, plt.cm.gray)
+    ax.imshow(core_img_array)
 
-    #show margin
-    print(Counter(label_array.flatten()))
-    ##此方法无法识别中空部位，会视为另一种区域
-    contours = measure.find_contours(label_array, 0.0117)
-    for n, contour in enumerate(contours):
-        ax.plot(contour[:, 1], contour[:, 0], linewidth=6)
+    ## draw the contour of annotation image
+    cs = ax.contour(annotation_img_array[:,:,0], levels=[1, 3, 4, 5, 6],
+                cmap="Accent", linewidths=3)
+    fig.colorbar(cs, ax=ax,extendfrac=False)
 
-    ax.set_title(case_name+' in Maps '+label_num)
+
+    ax.set_title(case_name+' by '+pathologist_num)
     ax.set_xticks([])
     ax.set_yticks([])
     plt.show()
     return ax
 
-# MarginPlot(r'W:\MRIData\OpenData\Gleason2019\Train Imgs\slide002_core033.jpg',
-#            r'W:\MRIData\OpenData\Gleason2019\Maps1_T\slide002_core033_classimg_nonconvex.png',
-#            'slide001_core037', '1')
+MarginPlot(r'W:\MRIData\OpenData\Gleason2019\Train Imgs\slide002_core033.jpg',
+           r'W:\MRIData\OpenData\Gleason2019\Maps1_T\slide002_core033_classimg_nonconvex.png')
 
 def Iteration(train_folder, label_folder):
     for sub_file in os.listdir(train_folder):
@@ -57,45 +89,6 @@ def Iteration(train_folder, label_folder):
 # Iteration(r'W:\MRIData\OpenData\Gleason2019\Train Imgs',
 #           r'W:\MRIData\OpenData\Gleason2019\Maps1_T')
 
-def ReadSingleImgByMatplot():
-    # img_path = r'W:\MRIData\OpenData\Gleason2019\Train Imgs\slide001_core003.jpg'
-    label_path = r'W:\MRIData\OpenData\Gleason2019\Maps1_T\slide002_core033_classimg_nonconvex.png'
-    #
-    # img = mpimg.imread(img_path)
-    label = mpimg.imread(label_path)
 
-    contours = measure.find_contours(label, 0.5)
 
-    max = np.max(label)
 
-    # MarginPlot(img, label)
-    counter = Counter(label.flatten())
-    print(counter)
-    # print(Counter(img.flatten()))
-    # img = MarginPlot(label)
-    plt.imshow(label)
-    plt.axis('off')
-    plt.show()
-
-# ReadSingleImgByMatplot()
-
-def ReadImgbyCV2():
-    import cv2  # 导入模块，opencv的python模块叫cv2
-    # imgobj = cv2.imread(r'W:\MRIData\OpenData\Gleason2019\Maps1_T\slide001_core037_classimg_nonconvex.png')
-    # imgobj = cv2.imread(r'W:\MRIData\OpenData\Gleason2019\Maps1_T\slide001_core008_classimg_nonconvex.png', 1)
-    imgobj = cv2.imread(r'W:\MRIData\OpenData\Gleason2019\Maps1_T\slide002_core033_classimg_nonconvex.png',1)
-    # 读取图像
-    # cv2.namedWindow("image")  # 创建窗口并显示的是图像类型
-    # print(np.max(imgobj))
-    # plt.imshow(imgobj)
-    # plt.show()
-    print(Counter(imgobj.flatten()))
-    imgobj=imgobj*255
-    print(np.max(imgobj))
-    plt.imshow(imgobj,cmap='winter')
-    plt.show()
-    # cv2.imshow("image", imgobj)
-    # cv2.waitKey(0)  # 等待事件触发，参数0表示永久等待
-    # cv2.destroyAllWindows()
-#
-ReadImgbyCV2()
