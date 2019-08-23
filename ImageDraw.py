@@ -2,7 +2,7 @@ import cv2
 import os
 import re
 import numpy as np
-
+from CustomerPath import core_img_path, annotation_img_path
 from collections import Counter
 from skimage import measure,draw
 
@@ -36,36 +36,80 @@ def ReadLabelingImg(annotation_img_path):
     """
     annotation_img_array = cv2.imread(annotation_img_path)
 
-    # read case infomation
+    # read case information
     pathologist_num = annotation_img_path.split('\\')[4]
 
-    return annotation_img_array, pathologist_num
+    return annotation_img_array[:, :, 0], pathologist_num
 
-def SeperateLabel(annotation_img_array):
+def SeparateLabel(annotation_img_array):
 
     seperate_label_array_dict = {}
-    for voxel_threshold in [1,3,4,5,6]:
+
+    # Separate 1, 3, 4, 5, 6 voxel array
+    print(Counter(annotation_img_array.flatten()))
+    for voxel_threshold in [1, 3, 4, 5, 6]:
         if voxel_threshold in annotation_img_array:
             sub_annotation_img_array = np.zeros(annotation_img_array.shape)
             sub_annotation_img_array[np.where(annotation_img_array == voxel_threshold)] = voxel_threshold
             seperate_label_array_dict[voxel_threshold] = sub_annotation_img_array
     return seperate_label_array_dict
 
-
-def MarginPlot(core_img_path, annotation_img_path):
+def OriginalImgPlot(core_img_path, annotation_img_path):
     '''
     Draw the margin of annotation image in core imag path
     :param core_img_path: image file path of core pathology image
     :param annotation_img_path: image file path of pathologist annotation img
-    :return:
+    :return: ax object
     '''
+
+    # Read Img and info
+
     core_img_array, case_name = ReadCoreImg(core_img_path)
     annotation_img_array, pathologist_num = ReadLabelingImg(annotation_img_path)
-    # if annotation_img_array[:,:,0].all() == annotation_img_array[:,:,1].all() and \
-    #     annotation_img_array[:, :, 0].all() == annotation_img_array[:, :, 2].all():
-    #     print('all same')
+    title = case_name+' in Maps of '+pathologist_num
+
+    # Show margin
+    ax = MarginPlot(core_img_array, annotation_img_array, title+' '+str(core_img_array.shape))
+    return ax
 
 
+def DownSamplingImgPlot(core_img_path, annotation_img_path):
+    '''
+    Draw the margin of annotation image in core imag path
+    :param core_img_path: image file path of core pathology image
+    :param annotation_img_path: image file path of pathologist annotation img
+    :return: ax object
+    '''
+
+    # Read Img and info
+
+    core_img_array, case_name = ReadCoreImg(core_img_path)
+    annotation_img_array, pathologist_num = ReadLabelingImg(annotation_img_path)
+    title = case_name+' in Maps of '+pathologist_num
+
+    #resize to (512,512)
+    downsampled_core_img_array = cv2.resize(core_img_array, (512, 512), interpolation=cv2.INTER_NEAREST)
+    downsampled_annotation_img_array = cv2.resize(annotation_img_array, (512, 512), interpolation=cv2.INTER_NEAREST)
+
+    # downsampled_core_img_array = cv2.pyrDown(core_img_array)
+    # downsampled_annotation_img_array = cv2.pyrDown(annotation_img_array)
+    # print('shape after downsampling ', downsampled_core_img_array.shape)
+
+    # Show margin
+    ax = MarginPlot(downsampled_core_img_array, downsampled_annotation_img_array,
+               title+' '+str(downsampled_core_img_array.shape))
+
+    return ax
+
+
+def MarginPlot(core_img_array, annotation_img_array, title):
+    """
+
+    :param core_img_array: the array of img want to show
+    :param annotation_img_array: the array of annotation want to show
+    :param title:
+    :return: ax object
+    """
 
     fig, ax = plt.subplots(1, 1, figsize=(8, 8))
 
@@ -75,53 +119,94 @@ def MarginPlot(core_img_path, annotation_img_path):
 
     # set color
 
-    color_map = {1:'lawngreen', 3:'darkorange', 4:'blue', 5:'red', 6:'black'}
-    seperate_label_array_dict = SeperateLabel(annotation_img_array[:,:,0])
+    color_map = {1:'lawngreen', 3:'darkorange', 4: 'blue', 5: 'red', 6: 'black'}
+
+    # separate label array
+
+    separate_label_array_dict = SeparateLabel(annotation_img_array[:, :, 0])
 
     # show contour in different voxel threshold
 
     for voxel_threshold in [1, 3, 4, 5, 6]:
-        if voxel_threshold in seperate_label_array_dict.keys():
-            seperate_label_array = seperate_label_array_dict[voxel_threshold]
-            ax.contour(seperate_label_array, colors=color_map[voxel_threshold])
+        if voxel_threshold in separate_label_array_dict.keys():
+            seperate_label_array = separate_label_array_dict[voxel_threshold]
+            ax.contour(seperate_label_array, colors=color_map[voxel_threshold], linewidths=1, linestyles='dotted')
+            # add special label for margin
             ax.plot(0, 0, '-', label=voxel_threshold, color=color_map[voxel_threshold])
-
-
 
     # cs = ax.contour(annotation_img_array[:,:,0], levels=[1, 3, 4, 5, 6],
     #             cmap="Accent", linewidths=5)
     # fig.colorbar(cs, ax=ax,extendfrac=False)
 
     ax.legend()
-    ax.set_title(case_name+' in Maps of '+pathologist_num)
+    ax.set_title(title)
     ax.set_xticks([])
     ax.set_yticks([])
-    plt.show()
+    # plt.show()
     return ax
 
-MarginPlot(r'W:\MRIData\OpenData\Gleason2019\Train Imgs\slide002_core033.jpg',
-           r'W:\MRIData\OpenData\Gleason2019\Maps1_T\slide002_core033_classimg_nonconvex.png')
-
-def Iteration(train_folder, label_folder):
-    for sub_file in os.listdir(train_folder):
-        case_name = sub_file.replace('.jpg', '')
-        case_path = os.path.join(train_folder, case_name+'.jpg')
-
-        label_path = os.path.join(label_folder, case_name+'_classimg_nonconvex.png')
-
-    #get the label num
-        label_num = re.findall('[1-9]', os.path.split(label_folder)[-1])
+def MergeOrigianlImgAndDownSampledImg(core_img_path, annotation_img_path):
 
 
-        if not os.path.exists(label_path):
-            print(case_name+' is not exist in label !')
-        else:
-            img = MarginPlot(case_path, label_path, case_name, label_num[0])
+    # Read Img and info
+
+    core_img_array, case_name = ReadCoreImg(core_img_path)
+    annotation_img_array, pathologist_num = ReadLabelingImg(annotation_img_path)
+    title = case_name+' in Maps of '+pathologist_num
+
+    #resize to (512,512)
+    downsampled_core_img_array = cv2.resize(core_img_array, (512, 512), interpolation=cv2.INTER_NEAREST)
+    downsampled_annotation_img_array = cv2.resize(annotation_img_array, (512, 512), interpolation=cv2.INTER_NEAREST)
+
+    fig = plt.figure()
+    fig.suptitle(title)
+
+    ax1 = plt.subplot(121)
+    ax2 = plt.subplot(122)
+
+    ax1.imshow(core_img_array)
+    ax1.set_title(str(core_img_array.shape))
+    ax1.set_xticks([])
+    ax1.set_yticks([])
 
 
-# Iteration(r'W:\MRIData\OpenData\Gleason2019\Train Imgs',
-#           r'W:\MRIData\OpenData\Gleason2019\Maps1_T')
+    # set color
+
+    color_map = {1:'lawngreen', 3:'darkorange', 4: 'blue', 5: 'red', 6: 'black'}
+
+    # separate label array
+
+    separate_label_array_dict = SeparateLabel(annotation_img_array)
+
+    for voxel_threshold in [1, 3, 4, 5, 6]:
+        if voxel_threshold in separate_label_array_dict.keys():
+            seperate_label_array = separate_label_array_dict[voxel_threshold]
+            ax1.contour(seperate_label_array, colors=color_map[voxel_threshold], linewidths=2, linestyles='dotted')
+            # add special label for margin
+            ax1.plot(0, 0, '-', label=voxel_threshold, color=color_map[voxel_threshold])
+
+    ax1.legend()
+
+    ax2.imshow(downsampled_core_img_array)
+    ax2.set_title(str(downsampled_core_img_array.shape)+' with INTER_NEAREST')
+    ax2.set_xticks([])
+    ax2.set_yticks([])
 
 
+    separate_label_array_dict = SeparateLabel(downsampled_annotation_img_array)
+
+    for voxel_threshold in [1, 3, 4, 5, 6]:
+        if voxel_threshold in separate_label_array_dict.keys():
+            seperate_label_array = separate_label_array_dict[voxel_threshold]
+            ax2.contour(seperate_label_array, colors=color_map[voxel_threshold], linewidths=1, linestyles='dotted')
+            # add special label for margin
+            ax2.plot(0, 0, '-', label=voxel_threshold, color=color_map[voxel_threshold])
+    ax2.legend()
+    plt.show()
+
+# core_img_path = r'W:\MRIData\OpenData\Gleason2019\Train Imgs\slide006_core110.jpg'
+# annotation_path = r'W:\MRIData\OpenData\Gleason2019\Maps1_T\slide006_core110_classimg_nonconvex.png'
+# DownSamplingImgPlot(core_img_path, annotation_img_path)
+# MergeOrigianlImgAndDownSampledImg(core_img_path, annotation_img_path)
 
 
