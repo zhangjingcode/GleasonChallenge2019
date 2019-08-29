@@ -56,5 +56,5 @@ def TestModel():
     model = UNet((496, 496, 3))
     model.summary()
 
-TestModel()
+# TestModel()
 
