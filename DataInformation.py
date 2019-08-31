@@ -1,60 +1,49 @@
+import os
+
 from collections import Counter
 import cv2
 import pandas as pd
 
+from CustomerPath import label_1_statistic_path
 
-def Test():
-    label_path = r'Z:\MRIData\OpenData\Gleason2019\Maps1_T\slide001_core037_classimg_nonconvex.png'
+def StatisticOneLabel(label_path):
     label = cv2.imread(label_path)
     info_dict = dict(Counter(label.flatten()))
-    number = 0
-    keys = list(info_dict.keys())
-    Dict = {}
-    for i in keys:
-        number = number + info_dict[i]
+    total_voxel_number = label.size
 
-    for i in keys:
-        Dict[i] = info_dict[i] / number
+    percentage_per_label = {}
+    for i in info_dict.keys():
+        percentage_per_label[i] = info_dict[i] / total_voxel_number
 
     print(info_dict)
-    print(Dict, sum)
-    return 0
-# Test()
+    return percentage_per_label
 
+def TStatisticOneLabel():
+    # label_path = r'Z:\MRIData\OpenData\Gleason2019\Maps1_T\slide001_core037_classimg_nonconvex.png'
+    # StatisticOneLabel(label_path)
+    pass
 
-def GetInfo():
-    import os
-
-    data_path = r'Z:\MRIData\OpenData\Gleason2019\Maps2_T'
-    file_list = os.listdir(data_path)
-    all_data = pd.DataFrame()
+def GetInfo(folder_path, store_path):
+    all_label_df = pd.DataFrame()
     sum_dict = {0: 0, 1: 0, 3: 0, 4: 0, 5: 0, 6: 0}
-    for file in file_list:
-        label_path = os.path.join(data_path, file)
-        label = cv2.imread(label_path)
-        info_dict = dict(Counter(label.flatten()))
-        Keys = list(info_dict.keys())
-        number = 0
-        Dict = {}
+    for file in sorted(os.listdir(folder_path)):
+        label_path = os.path.join(folder_path, file)
+        percentage_per_label = StatisticOneLabel(label_path)
 
-        for i in Keys:
-            number = number + info_dict[i]
-        for i in Keys:
-            Dict[i] = info_dict[i] / number
-            if Dict[i] != 0:
-                sum_dict[i] = sum_dict[i] + 1
-
-        Data = pd.DataFrame(Dict, index=[file])
-        all_data = pd.concat([all_data, Data])
-
+        one_label_df = pd.DataFrame(percentage_per_label, index=[file])
+        all_label_df = pd.concat([all_label_df, one_label_df])
         print(file)
-    Sum = pd.DataFrame(sum_dict, index=['sum'])
-    all_data = pd.concat([all_data, Sum])
-    all_data = all_data.fillna(0)
-    all_data.to_csv(r'C:\Users\Cherish\Desktop\DataInformation0.csv', mode='a',)
 
-    return 0
+    all_label_df = all_label_df.fillna(0)
 
+    # Sum = pd.DataFrame(sum_dict, index=['sum'])
+    # all_data = pd.concat([all_data, Sum])
+    all_label_df.to_csv(store_path, mode='a')
 
-GetInfo()
+def Demo():
+    df = pd.read_csv(label_1_statistic_path, header=0, index_col=0)
+    result = (df > 0.0).sum(axis=0)
+    print(result)
+
+Demo()
 
