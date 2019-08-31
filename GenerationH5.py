@@ -14,12 +14,8 @@ def SingleCaseGeneration(core_img_path, annotation_img_path, store_path):
 
     annotation_img_array, pathologist_num = ReadLabelingImg(annotation_img_path)
 
-    downsampled_core_img_array = cv2.resize(core_img_array, (256,256), interpolation=cv2.INTER_NEAREST)
-    downsampled_annotation_img_array = cv2.resize(annotation_img_array, (256,256), interpolation=cv2.INTER_NEAREST)
-
-    # plt.imshow(core_img_array)
-    # plt.show()
-
+    downsampled_core_img_array = cv2.resize(core_img_array, (256, 256), interpolation=cv2.INTER_NEAREST)
+    downsampled_annotation_img_array = cv2.resize(annotation_img_array, (256, 256), interpolation=cv2.INTER_NEAREST)
 
     with h5py.File(store_path, 'w') as target_h5_file:
         target_h5_file['input_0'] = downsampled_core_img_array / 255
@@ -27,7 +23,6 @@ def SingleCaseGeneration(core_img_path, annotation_img_path, store_path):
 
 
 def OneHot(annotaion_array):
-
     # One Hot
     # 背景, output : row x column x slices x 6
     output = np.zeros((annotaion_array.shape[0], annotaion_array.shape[1], 6))
@@ -39,7 +34,6 @@ def OneHot(annotaion_array):
     output[..., 5] = np.asarray(annotaion_array == 6, dtype=np.uint8)
 
     return output
-
 
 def CheckH5(h5_file_path, store_path='', show=False):
     plt.subplots_adjust(wspace=0.3, hspace=0.3)
@@ -60,7 +54,6 @@ def CheckH5(h5_file_path, store_path='', show=False):
     plt.hist(downsampled_core_img_array.flatten(),density=True)
     plt.title('pixel distribution of core img')
 
-
     plt.subplot(243)
     plt.imshow(downsampled_annotation_img_array[:, :, 0])
     plt.title('output_0 ' + '\n' + str(downsampled_annotation_img_array.shape)+'\n'+'000000')
@@ -72,7 +65,6 @@ def CheckH5(h5_file_path, store_path='', show=False):
     plt.title('output_0 ' + '\n' + str(downsampled_annotation_img_array.shape)+'\n'+'010000')
     plt.xticks([])
     plt.yticks([])
-
 
     plt.subplot(245)
     plt.imshow(downsampled_annotation_img_array[:, :, 2])
@@ -101,15 +93,12 @@ def CheckH5(h5_file_path, store_path='', show=False):
     if store_path:
         plt.savefig(store_path)
 
-
     if show:
         plt.show()
-
     plt.close()
 
 # SingleCaseGeneration(core_img_path, annotation_img_path, store_path)
 def Iteration(core_img_foler, annotation_img_foler, store_folder):
-
     for sub_file in os.listdir(core_img_foler):
 
         core_img_name = sub_file.replace('.jpg', '')
@@ -135,7 +124,11 @@ def ItrationCheck(folder,store_path):
 
             CheckH5(sub_file_path, store_path=sub_store_path)
 
-CheckH5(r'X:\PrcoessedData\Challenge_Gleason2019\ProcessedH5_Maps1_512\All_h5_file\slide001_core003_Maps1_T.h5')
+def TCheckH5():
+    from CustomerPath import one_h5_check_store_path, one_h5_file_path
+    CheckH5(one_h5_file_path, one_h5_check_store_path)
+TCheckH5()
+
 # ItrationCheck(r'D:\Gleason2019\TrainValidationTest_256\Test', r'D:\Gleason2019\TrainValidationTest_256\DataSetShow\Test')
 # Iteration(r'Y:\MRIData\OpenData\Gleason2019\Train Imgs',
 #           r'Y:\MRIData\OpenData\Gleason2019\Maps3_T', r'X:\PrcoessedData\Challenge_Gleason2019\ProcessedH5_Maps3_256')

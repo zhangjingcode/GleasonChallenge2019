@@ -1,20 +1,21 @@
 from keras.models import Model
-from keras.layers import Input, BatchNormalization, Concatenate, PReLU
+from keras.layers import Input, BatchNormalization, Concatenate, PReLU, ELU
 from keras.layers import Conv2D, MaxPooling2D, Conv2DTranspose
 import numpy as np
 
+from CNNModel.Model.UsualLayer import Conv2D_BN
 
 def Encoding(inputs, filters=64, blocks=4):
     outputs = []
     x = inputs
     for index in range(blocks):
-        x = Conv2D(filters * np.power(2, index), kernel_size=(3, 3), strides=(1, 1), padding='same', kernel_initializer='he_normal')(x)
+        x = Conv2D(filters * np.power(2, index), kernel_size=(3, 3), strides=(1, 1), use_bias=False, padding='same', kernel_initializer='he_normal')(x)
         x = BatchNormalization()(x)
-        x = PReLU()(x)
+        x = ELU()(x)
 
-        x = Conv2D(filters * np.power(2, index), kernel_size=(3, 3), strides=(1, 1), padding='same', kernel_initializer='he_normal')(x)
+        x = Conv2D(filters * np.power(2, index), kernel_size=(3, 3), strides=(1, 1), use_bias=False, padding='same', kernel_initializer='he_normal')(x)
         x = BatchNormalization()(x)
-        x = PReLU()(x)
+        x = ELU()(x)
 
         if index != blocks - 1:
             outputs.append(x)
@@ -29,13 +30,13 @@ def Decoding(inputs_1, inputs_2, filters=64, blocks=4):
         x = Conv2DTranspose(filters * np.power(2, index), kernel_size=(2, 2), strides=(2, 2), padding='same')(x)
         x = Concatenate(axis=3)([x, inputs_2[index]])
 
-        x = Conv2D(filters * np.power(2, index), kernel_size=(3, 3), strides=(1, 1), padding='same', kernel_initializer='he_normal')(x)
+        x = Conv2D(filters * np.power(2, index), kernel_size=(3, 3), strides=(1, 1), use_bias=False, padding='same', kernel_initializer='he_normal')(x)
         x = BatchNormalization()(x)
-        x = PReLU()(x)
+        x = ELU()(x)
 
-        x = Conv2D(filters * np.power(2, index), kernel_size=(3, 3), strides=(1, 1), padding='same', kernel_initializer='he_normal')(x)
+        x = Conv2D(filters * np.power(2, index), kernel_size=(3, 3), strides=(1, 1), use_bias=False, padding='same', kernel_initializer='he_normal')(x)
         x = BatchNormalization()(x)
-        x = PReLU()(x)
+        x = ELU()(x)
 
     return x
 
