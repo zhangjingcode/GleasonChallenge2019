@@ -8,14 +8,11 @@ import h5py
 
 from ImageDraw import ReadLabelingImg, ReadCoreImg
 from GenerationH5 import OneHot
-
-
+from MeDIT.SaveAndLoad import SaveH5
 
 def GetAllCoreImgPath(core_img_folder):
-
     return [os.path.join(core_img_folder, img_index) for img_index in os.listdir(core_img_folder) if
             os.path.splitext(img_index)[-1] == '.jpg']
-
 
 def GetAllAnnotationImgPath(annotation_img_folder, pathologists_num=6):
     all_annotation_path_list = []
@@ -25,7 +22,6 @@ def GetAllAnnotationImgPath(annotation_img_folder, pathologists_num=6):
                                     os.listdir(sub_annotation_path) if os.path.splitext(img_index)[-1] == '.png']
         all_annotation_path_list.append(sub_annotation_path_list)
     return all_annotation_path_list
-
 
 def CheckSingleCase(core_img_path, all_annotation_folder_path_list):
     core_index = os.path.split(core_img_path)[-1].replace('.jpg', '')
@@ -40,9 +36,8 @@ def CheckSingleCase(core_img_path, all_annotation_folder_path_list):
     #     print(index)
     return annotation_path_list
 
-
-
 def MergeAnnotation(core_img_path, annotation_img_path_list, store_path='', show=False):
+    # TODO: 1. 固定横纵比，2. 先One-hot编码，再进行Voting
     core_img_array, case_name = ReadCoreImg(core_img_path)
     core_img_array = cv2.resize(core_img_array, (512, 512), interpolation=cv2.INTER_NEAREST)
     annotation_dict = {}
@@ -55,7 +50,6 @@ def MergeAnnotation(core_img_path, annotation_img_path_list, store_path='', show
         annotation_dict[pathologist_num] = annotation_img_array
 
         merged_annotation_array[..., annotation_index] = annotation_img_array
-
 
     modal_merged_annotation_array = np.zeros((merged_annotation_array.shape[:2]))
     for row in range(merged_annotation_array.shape[0]):
@@ -71,12 +65,16 @@ def MergeAnnotation(core_img_path, annotation_img_path_list, store_path='', show
 
     if store_path:
         h5_store_path = os.path.join(store_path, case_name+'.h5')
-        with h5py.File(h5_store_path, 'w') as h5_file:
-            h5_file['input_0'] = core_img_array / 255
-            h5_file['output_0'] = OneHot(modal_merged_annotation_array)
+        SaveH5(h5_store_path,
+               [core_img_array / 128 - 1, OneHot(modal_merged_annotation_array)],
+               tag=['input_0', 'output_0'],
+               data_type=[np.float, np.float])
+
+        # with h5py.File(h5_store_path, 'w') as h5_file:
+        #     h5_file['input_0'] = core_img_array / 128 - 1
+        #     h5_file['output_0'] = OneHot(modal_merged_annotation_array)
 
     return modal_merged_annotation_array
-
 
 def Show(core_img_array, modal_merged_annotation_array, store_path='', show=True):
     plt.subplot(241)
@@ -141,8 +139,6 @@ def Show(core_img_array, modal_merged_annotation_array, store_path='', show=True
         plt.show()
 
     plt.close()
-
-
 
 def GenerationH5(core_img_folder, store_folder):
     for sub_file in os.listdir(core_img_folder):

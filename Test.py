@@ -1,8 +1,8 @@
 # test
+from CNNModel.Utility.SaveAndLoad import LoadModel
 
 
 model_path = r'D:\Gleason2019\TrainValidationTest_256\model_binary_entropy'
-from MeDIT.SaveAndLoad import LoadModel
 model = LoadModel(model_path, 'best_weights.h5', is_show_summary=True)
 
 # training_folder = r'E:\ProcessData\ImageQuality-Checked-ZJ-SY\training'
@@ -77,7 +77,7 @@ def ShowPred(output_list, pred, save_path=''):
 
         plt.subplot(235)
         plt.contour(output_list[case_num, :, :, 4], colors='r')
-        plt.imshow(pred[case_num, :, :, 4], cmap='gray')
+        plt.imshow(pred[case_num, :, :, 4], cmap='gray', vmin=0.0, vmax=1.0)
         plt.xticks([])
         plt.yticks([])
         plt.title('OneHot 000010')
