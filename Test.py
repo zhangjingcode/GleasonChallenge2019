@@ -2,7 +2,7 @@
 
 
 model_path = r'D:\Gleason2019\TrainValidationTest_256\model_binary_entropy'
-from MeDIT.CNNModel.SaveAndLoad import LoadModel
+from MeDIT.SaveAndLoad import LoadModel
 model = LoadModel(model_path, 'best_weights.h5', is_show_summary=True)
 
 # training_folder = r'E:\ProcessData\ImageQuality-Checked-ZJ-SY\training'
@@ -12,14 +12,7 @@ testing_folder = r'D:\Gleason2019\TrainValidationTest_256\Test'
 input_shape = [240, 240, 3]
 batch_size = 4
 
-from Generate import ImageInImageOut2DTest
-
-
-from sklearn.metrics import roc_curve
-
-from sklearn.metrics import auc
-
-import matplotlib.pyplot as plt
+from CNNModel.Training.Generate import ImageInImageOut2DTest
 
 input_list, output_list, case_list = ImageInImageOut2DTest(testing_folder, input_shape=input_shape)
 #(23, 240, 240, 6)
