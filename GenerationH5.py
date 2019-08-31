@@ -14,8 +14,8 @@ def SingleCaseGeneration(core_img_path, annotation_img_path, store_path):
 
     annotation_img_array, pathologist_num = ReadLabelingImg(annotation_img_path)
 
-    downsampled_core_img_array = cv2.resize(core_img_array, (512, 512), interpolation=cv2.INTER_NEAREST)
-    downsampled_annotation_img_array = cv2.resize(annotation_img_array, (512, 512), interpolation=cv2.INTER_NEAREST)
+    downsampled_core_img_array = cv2.resize(core_img_array, (256,256), interpolation=cv2.INTER_NEAREST)
+    downsampled_annotation_img_array = cv2.resize(annotation_img_array, (256,256), interpolation=cv2.INTER_NEAREST)
 
     # plt.imshow(core_img_array)
     # plt.show()
@@ -41,7 +41,7 @@ def OneHot(annotaion_array):
     return output
 
 
-def CheckH5(h5_file_path):
+def CheckH5(h5_file_path, store_path='', show=False):
     plt.subplots_adjust(wspace=0.3, hspace=0.3)
     plt.suptitle(os.path.split(h5_file_path)[-1])
 
@@ -57,7 +57,7 @@ def CheckH5(h5_file_path):
     plt.yticks([])
 
     plt.subplot(242)
-    plt.hist(downsampled_core_img_array.flatten(),normed=True)
+    plt.hist(downsampled_core_img_array.flatten(),density=True)
     plt.title('pixel distribution of core img')
 
 
@@ -98,8 +98,14 @@ def CheckH5(h5_file_path):
     plt.xticks([])
     plt.yticks([])
 
+    if store_path:
+        plt.savefig(store_path)
 
-    plt.show()
+
+    if show:
+        plt.show()
+
+    plt.close()
 
 # SingleCaseGeneration(core_img_path, annotation_img_path, store_path)
 def Iteration(core_img_foler, annotation_img_foler, store_folder):
@@ -121,6 +127,15 @@ def Iteration(core_img_foler, annotation_img_foler, store_folder):
         else:
             SingleCaseGeneration(core_img_path, annotation_img_path, store_path)
 
-# CheckH5(r'C:\Users\zj\Desktop\Gleason\slide001_core003_Maps1_T.h5')
-Iteration(r'W:\MRIData\OpenData\Gleason2019\Train Imgs',
-          r'W:\MRIData\OpenData\Gleason2019\Maps1_T', r'U:\PrcoessedData\Challenge_Gleason2019\ProcessedH5_Maps1')
+def ItrationCheck(folder,store_path):
+    for sub_file in os.listdir(folder):
+        if os.path.split(sub_file)[-1].rfind('.h5') != -1:
+            sub_file_path = os.path.join(folder, sub_file)
+            sub_store_path = os.path.join(store_path, sub_file.replace('.h5', '.png'))
+
+            CheckH5(sub_file_path, store_path=sub_store_path)
+
+CheckH5(r'X:\PrcoessedData\Challenge_Gleason2019\ProcessedH5_Maps1_512\All_h5_file\slide001_core003_Maps1_T.h5')
+# ItrationCheck(r'D:\Gleason2019\TrainValidationTest_256\Test', r'D:\Gleason2019\TrainValidationTest_256\DataSetShow\Test')
+# Iteration(r'Y:\MRIData\OpenData\Gleason2019\Train Imgs',
+#           r'Y:\MRIData\OpenData\Gleason2019\Maps3_T', r'X:\PrcoessedData\Challenge_Gleason2019\ProcessedH5_Maps3_256')
