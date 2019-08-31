@@ -1,4 +1,5 @@
 # GleasonChallenge2019
+https://bmiai.ubc.ca/research/miccai-automatic-prostate-gleason-grading-challenge-2019
   This challenge is part of the MICCAI 2019 Conference to be held from October 13 to 17 in Shenzhen, China.
 
   This challenge will be one of the three challenges under the MICCAI 2019 Grand Challenge for Pathology.
