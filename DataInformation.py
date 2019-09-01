@@ -18,14 +18,16 @@ def StatisticOneLabel(label_path):
     print(info_dict)
     return percentage_per_label
 
-def TStatisticOneLabel():
-    # label_path = r'Z:\MRIData\OpenData\Gleason2019\Maps1_T\slide001_core037_classimg_nonconvex.png'
-    # StatisticOneLabel(label_path)
-    pass
+def TestatisticOneLabel():
+    label_path = r'Z:\MRIData\OpenData\Gleason2019\Maps1_T\slide001_core037_classimg_nonconvex.png'
+    StatisticOneLabel(label_path)
 
-def GetInfo(folder_path, store_path):
+
+# TestatisticOneLabel()
+
+
+def StatisticLabel(folder_path, store_path):
     all_label_df = pd.DataFrame()
-    sum_dict = {0: 0, 1: 0, 3: 0, 4: 0, 5: 0, 6: 0}
     for file in sorted(os.listdir(folder_path)):
         label_path = os.path.join(folder_path, file)
         percentage_per_label = StatisticOneLabel(label_path)
@@ -35,9 +37,6 @@ def GetInfo(folder_path, store_path):
         print(file)
 
     all_label_df = all_label_df.fillna(0)
-
-    # Sum = pd.DataFrame(sum_dict, index=['sum'])
-    # all_data = pd.concat([all_data, Sum])
     all_label_df.to_csv(store_path, mode='a')
 
 def Demo():
@@ -45,5 +44,23 @@ def Demo():
     result = (df > 0.0).sum(axis=0)
     print(result)
 
-Demo()
+# Demo()
 
+
+def GetLabelShape(folder_path, store_path):
+    all_shape_df = pd.DataFrame()
+    for file in sorted(os.listdir(folder_path)):
+        shape_dict = {}
+        label_path = os.path.join(folder_path, file)
+        label = cv2.imread(label_path)
+        shape_dict['rows'] = label.shape[0]
+        shape_dict['columns'] = label.shape[1]
+        shape_dict['channels'] = label.shape[-1]
+        print(file)
+        label_df = pd.DataFrame(shape_dict, index=[file])
+        all_shape_df = pd.concat([all_shape_df, label_df])
+    all_shape_df.to_csv(store_path, mode='a')
+
+
+from CustomerPath import folder_path, store_path
+# GetLabelShape(folder_path, store_path)
