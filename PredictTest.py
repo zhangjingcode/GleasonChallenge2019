@@ -1,11 +1,31 @@
 # test
+<<<<<<< Updated upstream:PredictTest.py
 import os
 import numpy as np
 import h5py
+=======
+import tensorflow as tf
+config = tf.ConfigProto(log_device_placement=True)
+config.gpu_options.per_process_gpu_memory_fraction=0.3 # don't hog all vRAM
+config.operation_timeout_in_ms=15000   # terminate on long hangs
+sess = tf.InteractiveSession("", config=config)
+>>>>>>> Stashed changes:Test.py
 
 import matplotlib.pyplot as plt
 
+<<<<<<< Updated upstream:PredictTest.py
 from CustomerPath import model_path, testing_folder, save_path
+=======
+<<<<<<< Updated upstream
+model_path = r'D:\Gleason2019\TrainValidationTest_256\model_binary_entropy'
+from MeDIT.SaveAndLoad import LoadModel
+=======
+
+model_path = r'D:\Gleason2019\TrainValidationTest_256\model_categorical_crossentropy'
+from MeDIT.CNNModel.SaveAndLoad import LoadModel,LoadHistory
+>>>>>>> Stashed changes
+model = LoadModel(model_path, 'best_weights.h5', is_show_summary=True)
+>>>>>>> Stashed changes:Test.py
 
 
 input_shape = [240, 240, 3]
@@ -17,11 +37,21 @@ def LoadTest():
     return input_list, output_list, case_list
 
 
+<<<<<<< Updated upstream:PredictTest.py
 def SavePredict(model_path, input_list, save_path, batch_size):
     from CNNModel.Utility.SaveAndLoad import LoadModel
     model = LoadModel(model_path, 'best_weights.h5', is_show_summary=True)
     pred = model.predict(input_list, batch_size=batch_size)
     np.save(os.path.join(save_path, 'prediction_test.npy'), pred)
+=======
+def SavePredArray(pred, save_path=''):
+    import numpy as np
+    import os
+    for case_num in range(pred.shape[0]):
+        pred_array = pred[case_num, :,:,:]
+        np.save(os.path.join(save_path, str(case_num)+'.npy'), pred_array)
+
+>>>>>>> Stashed changes:Test.py
 
 
 def ShowPred(output_list, save_path=''):
@@ -93,10 +123,16 @@ def ShowPred(output_list, save_path=''):
             plt.savefig(sub_save_path)
             plt.close()
         # plt.show()
+<<<<<<< Updated upstream:PredictTest.py
 
 # ShowPred(output_list, pred, save_path=r'D:\Gleason2019\TrainValidationTest_256\model_binary_entropy\PredShowTest')
+=======
+# LoadHistory(model_path, is_show=True)
+# show_train_history(history, 'loss', 'val_loss')
+# ShowPred(output_list, pred, save_path=r'D:\Gleason2019\TrainValidationTest_256\model_categorical_crossentropy\PredShow')
+>>>>>>> Stashed changes:Test.py
 # plt.savefig(os.path.join(os.path.split(model_path)[0], 'ROC.png'))
-
+SavePredArray(pred, r'D:\Gleason2019\TrainValidationTest_256\TrainValidationTest_256\TestPred')
 
 def SavePredH5(input, output, save_path=''):
     pred = np.load(os.path.join(save_path, 'prediction_test.npy'))
