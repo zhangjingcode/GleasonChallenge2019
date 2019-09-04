@@ -6,8 +6,9 @@ import pandas as pd
 import cv2
 import h5py
 
-from ImageDraw import ReadLabelingImg, ReadCoreImg
-from GenerationH5 import OneHot
+from Utility.ReadAndSave import ReadCoreImg, ReadLabelingImg
+from Utility.ArrayProcess import OneHot
+from Utility.Visulization import ShowOneHot,ShowH5
 from MeDIT.SaveAndLoad import SaveH5
 
 def GetAllCoreImgPath(core_img_folder):
@@ -39,34 +40,47 @@ def CheckSingleCase(core_img_path, all_annotation_folder_path_list):
 def MergeAnnotation(core_img_path, annotation_img_path_list, store_path='', show=False):
     # TODO: 1. 固定横纵比，2. 先One-hot编码，再进行Voting
     core_img_array, case_name = ReadCoreImg(core_img_path)
-    core_img_array = cv2.resize(core_img_array, (512, 512), interpolation=cv2.INTER_NEAREST)
+
+    col = core_img_array.shape[1]
+    row = core_img_array.shape[0]
+
+
+    core_img_array = cv2.resize(core_img_array, (col//10, row//10), interpolation=cv2.INTER_CUBIC)
     annotation_dict = {}
 
-    merged_annotation_array = np.zeros((core_img_array.shape[0],core_img_array.shape[1], len(annotation_img_path_list)))
+    merged_annotation_array = np.zeros((core_img_array.shape[0], core_img_array.shape[1], 6, len(annotation_img_path_list)))
     for annotation_index in range(len(annotation_img_path_list)):
         annotation_img_array, pathologist_num = ReadLabelingImg(annotation_img_path_list[annotation_index])
-        annotation_img_array = cv2.resize(cv2.resize(annotation_img_array, (512, 512), interpolation=cv2.INTER_NEAREST),
-                                          (512, 512), interpolation=cv2.INTER_NEAREST)
-        annotation_dict[pathologist_num] = annotation_img_array
+        annotation_img_array = cv2.resize(cv2.resize(annotation_img_array, (col//10, row//10), interpolation=cv2.INTER_NEAREST),
+                                          (col//10, row//10), interpolation=cv2.INTER_NEAREST)
 
-        merged_annotation_array[..., annotation_index] = annotation_img_array
+        #median filter
+        annotation_img_array = cv2.medianBlur(annotation_img_array, 9)
 
-    modal_merged_annotation_array = np.zeros((merged_annotation_array.shape[:2]))
+        annotation_dict[pathologist_num] = OneHot(annotation_img_array)
+        if show:
+            ShowOneHot(core_img_array, OneHot(annotation_img_array), title=case_name+'_'+pathologist_num, store_path=
+                   os.path.join(store_path, case_name+'_'+pathologist_num+'.jpg'))
+
+        merged_annotation_array[..., annotation_index] = OneHot(annotation_img_array)
+
+    # merged_annotation_one_hot_array = OneHot(merged_annotation_array)
+    modal_merged_annotation_array = np.zeros((merged_annotation_array.shape[:3]))
     for row in range(merged_annotation_array.shape[0]):
         for col in range(merged_annotation_array.shape[1]):
-            # print(row, col)
-            annotation_array = np.array(merged_annotation_array[row, col, :], dtype=np.int64)
+            print(row, col)
+            annotation_array = np.array(merged_annotation_array[row, col, ...], dtype=np.int64)
 
-            count = np.bincount(annotation_array)
-            modal_merged_annotation_array[row, col] = np.argmax(count)
+            modal_merged_annotation_array[row, col, :] = np.sum(annotation_array, axis=1)/annotation_array.shape[-1]
 
     if show:
-        Show(core_img_array, modal_merged_annotation_array)
+        ShowOneHot(core_img_array, modal_merged_annotation_array, title=case_name, store_path=
+                   os.path.join(store_path, case_name+'.jpg'))
 
     if store_path:
         h5_store_path = os.path.join(store_path, case_name+'.h5')
         SaveH5(h5_store_path,
-               [core_img_array / 128 - 1, OneHot(modal_merged_annotation_array)],
+               [core_img_array / 128 - 1, modal_merged_annotation_array],
                tag=['input_0', 'output_0'],
                data_type=[np.float, np.float])
 
@@ -76,69 +90,7 @@ def MergeAnnotation(core_img_path, annotation_img_path_list, store_path='', show
 
     return modal_merged_annotation_array
 
-def Show(core_img_array, modal_merged_annotation_array, store_path='', show=True):
-    plt.subplot(241)
-    plt.imshow(core_img_array)
-    plt.xticks([])
-    plt.yticks([])
-    plt.title('Core Img' + '\n' + str(core_img_array.shape))
-    
-    
-    one_hot_array = OneHot(modal_merged_annotation_array)
 
-    plt.imshow(core_img_array)
-    # plt.contour(downsampled_annotation_img_array)
-    plt.title('input_0 ' + '\n' + str(one_hot_array.shape))
-    plt.xticks([])
-    plt.yticks([])
-
-    plt.subplot(242)
-    plt.hist(core_img_array.flatten(), density=True)
-    plt.title('pixel distribution of core img')
-
-    plt.subplot(243)
-    plt.imshow(one_hot_array[:, :, 0])
-    plt.title('output_0 ' + '\n' + str(one_hot_array.shape) + '\n' + '000000')
-    plt.xticks([])
-    plt.yticks([])
-
-    plt.subplot(244)
-    plt.imshow(one_hot_array[:, :, 1])
-    plt.title('output_0 ' + '\n' + str(one_hot_array.shape) + '\n' + '010000')
-    plt.xticks([])
-    plt.yticks([])
-
-    plt.subplot(245)
-    plt.imshow(one_hot_array[:, :, 2])
-    plt.title('output_0 ' + '\n' + str(one_hot_array.shape) + '\n' + '001000')
-    plt.xticks([])
-    plt.yticks([])
-
-    plt.subplot(246)
-    plt.imshow(one_hot_array[:, :, 3])
-    plt.title('output_0' + '\n' + str(one_hot_array.shape) + '\n' + '000100')
-    plt.xticks([])
-    plt.yticks([])
-
-    plt.subplot(247)
-    plt.imshow(one_hot_array[:, :, 4])
-    plt.title('output_0 ' + '\n' + str(one_hot_array.shape) + '\n' + '000010')
-    plt.xticks([])
-    plt.yticks([])
-
-    plt.subplot(248)
-    plt.imshow(one_hot_array[:, :, 5])
-    plt.title('output_0 ' + '\n' + str(one_hot_array.shape) + '\n' + '000001')
-    plt.xticks([])
-    plt.yticks([])
-
-    if store_path:
-        plt.savefig(store_path)
-
-    if show:
-        plt.show()
-
-    plt.close()
 
 def GenerationH5(core_img_folder, store_folder):
     for sub_file in os.listdir(core_img_folder):
@@ -147,12 +99,13 @@ def GenerationH5(core_img_folder, store_folder):
             print(sub_file_path)
 
             MergeAnnotation(sub_file_path,
-                            CheckSingleCase(sub_file_path, GetAllAnnotationImgPath(r'Y:\MRIData\OpenData\Gleason2019')),
-                            store_path=store_folder)
+                            CheckSingleCase(sub_file_path, GetAllAnnotationImgPath(r'W:\MRIData\OpenData\Gleason2019')),
+                            store_path=store_folder, show=False)
 # CheckSingleCase('slide001_core003', GetAllAnnotationImgPath(r'W:\MRIData\OpenData\Gleason2019'))
-# core_img_path = r'Y:\MRIData\OpenData\Gleason2019\Train Imgs\slide002_core041.jpg'
+# core_img_path = r'W:\MRIData\OpenData\Gleason2019\Train Imgs\slide002_core041.jpg'
 # MergeAnnotation(core_img_path,
-#                 CheckSingleCase(core_img_path, GetAllAnnotationImgPath(r'Y:\MRIData\OpenData\Gleason2019')))
+#                 CheckSingleCase(core_img_path, GetAllAnnotationImgPath(r'W:\MRIData\OpenData\Gleason2019')), show=True,
+#                 store_path=r'C:\Users\zj\Desktop\word_and_ppt\GleasonChallenge\OneHotVote')
 
-GenerationH5(r'Y:\MRIData\OpenData\Gleason2019\Train Imgs',
-             r'X:\PrcoessedData\Challenge_Gleason2019\ProcessedH5_merged_512\all_data')
+GenerationH5(r'W:\MRIData\OpenData\Gleason2019\Train Imgs',
+             r'V:\PrcoessedData\Challenge_Gleason2019\ProcessedH5_voted_10down\all_data')

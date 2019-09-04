@@ -4,67 +4,18 @@ import re
 import cv2
 import numpy as np
 from collections import Counter
-<<<<<<< Updated upstream
+
 from skimage import measure, draw
 
-=======
-from skimage import measure,draw
->>>>>>> Stashed changes
 import matplotlib.image as mpimg
 import matplotlib.pyplot as plt
-
-from CustomerPath import core_img_path, annotation_img_path
-
-
-def ReadCoreImg(core_img_path):
-    """
-    Read pathology img by cv2
-
-    :param core_img_path: image file path of core pathology image
-    :return: img_array and case name
-    """
-
-    # Read image
-    core_img_array = cv2.imread(core_img_path)
-
-    # read case infomation
-    case_path = os.path.split(core_img_path)[-1]
-    case_name = case_path.replace('.jpg', '')
-
-    return core_img_array, case_name
-
-<<<<<<< Updated upstream
-def ReadLabelingImg(annotation_img_path):
-=======
-
-def ReadAnnotationImg(annotation_img_path):
->>>>>>> Stashed changes
-    """
-    Read pathologist annotation img by cv2
-    :param Annotation_img_path: image file path of pathologist annotation img
-    :return: labeling_array, pathologist' number
-    """
-    annotation_img_array = cv2.imread(annotation_img_path)
-
-    # read case information
-    pathologist_num = annotation_img_path.split('\\')[4]
-
-    return annotation_img_array[:, :, 0], pathologist_num
+from .Utility.ReadAndSave import ReadCoreImg, ReadLabelingImg
+# from CustomerPath import core_img_path, annotation_img_path
 
 
-def SeparateLabel(annotation_img_array):
-    seperate_label_array_dict = {}
 
-    # Separate 1, 3, 4, 5, 6 voxel array
-    print(Counter(annotation_img_array.flatten()))
-    for specific_label in [1, 3, 4, 5, 6]:
-        if specific_label in annotation_img_array:
-            sub_annotation_img_array = np.zeros(annotation_img_array.shape)
-            sub_annotation_img_array[annotation_img_array == specific_label] = specific_label
-            seperate_label_array_dict[specific_label] = sub_annotation_img_array
-    return seperate_label_array_dict
 
-<<<<<<< Updated upstream
+
 def MarginPlot(core_img_array, annotation_img_array, title):
     """
 
@@ -98,13 +49,9 @@ def MarginPlot(core_img_array, annotation_img_array, title):
 ############################################################
 
 def OriginalImagePlot(core_img_path, annotation_img_path):
-    '''
-=======
 
-def OriginalImgPlot(core_img_path, annotation_img_path):
     """
 
->>>>>>> Stashed changes
     Draw the margin of annotation image in core imag path
     :param core_img_path: image file path of core pathology image
     :param annotation_img_path: image file path of pathologist annotation img
@@ -113,13 +60,10 @@ def OriginalImgPlot(core_img_path, annotation_img_path):
 
     # Read Img and info
     core_img_array, case_name = ReadCoreImg(core_img_path)
-<<<<<<< Updated upstream
+
     annotation_img_array, pathologist_num = ReadLabelingImg(annotation_img_path)
     title = case_name + ' in Maps of ' + pathologist_num
-=======
-    annotation_img_array, pathologist_num = ReadAnnotationImg(annotation_img_path)
-    title = case_name+' in Maps of '+pathologist_num
->>>>>>> Stashed changes
+
 
     # Show margin
     ax = MarginPlot(core_img_array, annotation_img_array, title + ' ' + str(core_img_array.shape))
@@ -137,19 +81,12 @@ def DownSamplingImgPlot(core_img_path, annotation_img_path):
     # Read Img and info
 
     core_img_array, case_name = ReadCoreImg(core_img_path)
-<<<<<<< Updated upstream
+
     annotation_img_array, pathologist_num = ReadLabelingImg(annotation_img_path)
 
     row, column = core_img_array.shape[:2]
-=======
-    annotation_img_array, pathologist_num = ReadAnnotationImg(annotation_img_path)
-    title = case_name+' in Maps of '+pathologist_num
 
-    #resize to (512,512)
 
-    downsampled_core_img_array = cv2.resize(core_img_array, (512, 512), interpolation=cv2.INTER_NEAREST)
-    downsampled_annotation_img_array = cv2.resize(annotation_img_array, (512, 512), interpolation=cv2.INTER_NEAREST)
->>>>>>> Stashed changes
 
     # down-sampling 10 times
     downsampled_core_img_array = cv2.resize(core_img_array, (row // 10, column // 10), interpolation=cv2.INTER_CUBIC)
@@ -160,9 +97,9 @@ def DownSamplingImgPlot(core_img_path, annotation_img_path):
 
     return ax
 
-<<<<<<< Updated upstream
+
 ############################################################
-=======
+
 
 def MarginPlot(core_img_array, annotation_img_array, title):
     """
@@ -206,12 +143,12 @@ def MarginPlot(core_img_array, annotation_img_array, title):
     ax.set_yticks([])
     # plt.show()
     return ax
->>>>>>> Stashed changes
+
 
 def MergeOrigianlImgAndDownSampledImg(core_img_path, annotation_img_path):
 
     core_img_array, case_name = ReadCoreImg(core_img_path)
-    annotation_img_array, pathologist_num = ReadAnnotationImg(annotation_img_path)
+    annotation_img_array, pathologist_num = ReadLabelingImg(annotation_img_path)
     title = case_name+' in Maps of '+pathologist_num
 
     #resize to (512,512)
@@ -261,17 +198,12 @@ def MergeOrigianlImgAndDownSampledImg(core_img_path, annotation_img_path):
     ax2.legend()
     plt.show()
 
-<<<<<<< Updated upstream
+
 if __name__ == '__main__':
     core_img_path = r'W:\MRIData\OpenData\Gleason2019\Train Imgs\slide006_core110.jpg'
     annotation_path = r'W:\MRIData\OpenData\Gleason2019\Maps1_T\slide006_core110_classimg_nonconvex.png'
     DownSamplingImgPlot(core_img_path, annotation_img_path)
     MergeOrigianlImgAndDownSampledImg(core_img_path, annotation_img_path)
-=======
-# core_img_path = r'W:\MRIData\OpenData\Gleason2019\Train Imgs\slide006_core110.jpg'
-# annotation_path = r'W:\MRIData\OpenData\Gleason2019\Maps1_T\slide006_core110_classimg_nonconvex.png'
-DownSamplingImgPlot(core_img_path, annotation_img_path)
-MergeOrigianlImgAndDownSampledImg(core_img_path, annotation_img_path)
->>>>>>> Stashed changes
+
 
 
