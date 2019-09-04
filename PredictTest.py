@@ -12,6 +12,7 @@ sess = tf.InteractiveSession("", config=config)
 >>>>>>> Stashed changes:Test.py
 
 import matplotlib.pyplot as plt
+import scipy.signal as signal
 
 <<<<<<< Updated upstream:PredictTest.py
 from CustomerPath import model_path, testing_folder, save_path
@@ -31,8 +32,9 @@ model = LoadModel(model_path, 'best_weights.h5', is_show_summary=True)
 input_shape = [240, 240, 3]
 batch_size = 4
 
-def LoadTest():
-    from CNNModel.Training.Generate import ImageInImageOut2DTest
+
+def LoadTest(testing_folder, input_shape):
+
     input_list, output_list, case_list = ImageInImageOut2DTest(testing_folder, input_shape=input_shape)
     return input_list, output_list, case_list
 
@@ -68,8 +70,9 @@ def ShowPred(output_list, save_path=''):
         plt.imshow(pred[case_num, :, :, 0], cmap='gray')
         plt.xticks([])
         plt.yticks([])
+        plt.colorbar()
         plt.title('OneHot 100000')
-        plt.plot(0,0,'-', color='r', label='Annotation')
+        plt.plot(0, 0, '-', color='r', label='Annotation')
         plt.legend()
 
         plt.subplot(232)
@@ -77,8 +80,9 @@ def ShowPred(output_list, save_path=''):
         plt.imshow(pred[case_num, :, :, 1], cmap='gray')
         plt.xticks([])
         plt.yticks([])
+        plt.colorbar()
         plt.title('OneHot 010000')
-        plt.plot(0,0,'-', color='r', label='Annotation')
+        plt.plot(0, 0, '-', color='r', label='Annotation')
         plt.legend()
 
         plt.subplot(233)
@@ -86,8 +90,9 @@ def ShowPred(output_list, save_path=''):
         plt.imshow(pred[case_num, :, :, 2], cmap='gray')
         plt.xticks([])
         plt.yticks([])
+        plt.colorbar()
         plt.title('OneHot 001000')
-        plt.plot(0,0,'-', color='r', label='Annotation')
+        plt.plot(0, 0, '-', color='r', label='Annotation')
         plt.legend()
 
         plt.subplot(234)
@@ -95,8 +100,9 @@ def ShowPred(output_list, save_path=''):
         plt.imshow(pred[case_num, :, :, 3], cmap='gray')
         plt.xticks([])
         plt.yticks([])
+        plt.colorbar()
         plt.title('OneHot 000100')
-        plt.plot(0,0,'-', color='r', label='Annotation')
+        plt.plot(0, 0, '-', color='r', label='Annotation')
         plt.legend()
 
         plt.subplot(235)
@@ -104,8 +110,9 @@ def ShowPred(output_list, save_path=''):
         plt.imshow(pred[case_num, :, :, 4], cmap='gray', vmin=0.0, vmax=1.0)
         plt.xticks([])
         plt.yticks([])
+        plt.colorbar()
         plt.title('OneHot 000010')
-        plt.plot(0,0,'-', color='r', label='Annotation')
+        plt.plot(0, 0, '-', color='r', label='Annotation')
         plt.legend()
 
         plt.subplot(236)
@@ -113,8 +120,9 @@ def ShowPred(output_list, save_path=''):
         plt.imshow(pred[case_num, :, :, 5], cmap='gray')
         plt.xticks([])
         plt.yticks([])
+        plt.colorbar()
         plt.title('OneHot 000001')
-        plt.plot(0,0,'-', color='r', label='Annotation')
+        plt.plot(0, 0, '-', color='r', label='Annotation')
         plt.legend()
 
 
@@ -145,26 +153,84 @@ def SavePredH5(input, output, save_path=''):
             f['predict_0'] = pred[case_num, :]
 
 
-def MergeOneLabel(save_path):
-    pred = np.load(os.path.join(save_path, 'prediction_test.npy'))
-    one_label = pred[4, :]
-    new_array = np.zeros(shape=(one_label.shape[0], one_label.shape[1], 1))
+def MergeOnePred(one_label):
+    merged_one_label = np.zeros(shape=(one_label.shape[0], one_label.shape[1]), dtype=np.float32)
     for raw in range(one_label.shape[0]):
         for colunms in range(one_label.shape[1]):
-            index = np.argmax(one_label[raw, colunms, :])
-            if index > 2:
-                new_array[raw, colunms, 0] = index + 1
+            index = np.argmax(one_label[raw, colunms])
+            if index > 1:
+                merged_one_label[raw, colunms] = index + 1
             else:
-                new_array[raw, colunms, 0] = index
+                merged_one_label[raw, colunms] = index
 
-    return new_array
+    return merged_one_label
 
 
-def TestMergeOneLabel():
-    import matplotlib.pyplot as plt
-    array = MergeOneLabel(save_path)
-    plt.imshow(array[:, :, 0], cmap='gray')
+def TestMergeOnePred():
+    pred = np.load(os.path.join(save_path, 'prediction_test.npy'))
+    one_label = output_list[0, :]
+    one_predict = pred[0, :]
+    merged_predict = MergeOnePred(one_predict)
+
+
+    # array_median = cv2.medianBlur(merged_predict, 5)
+    plt.subplot(121)
+    plt.contour(one_label[:, :, 0], colors='r')
+    plt.imshow(one_predict[:, :, 0], cmap='gray')
+    plt.subplot(122)
+    plt.contour(one_label[:, :, 0], colors='r')
+    plt.imshow(merged_predict[:, :, 0], cmap='gray')
+
     plt.show()
 
 
-TestMergeOneLabel()
+# TestMergeOnePred()
+
+def MergeLabel(save_path, show_pixls=False):
+    pred = np.load(os.path.join(save_path, 'prediction_test.npy'))
+    print()
+    for case_num in range(pred.shape[0]):
+
+        merged_pred = MergeOnePred(pred[case_num, :])
+
+
+        # 中值滤波
+        merged_median_pred = signal.medfilt(merged_pred, 15)
+
+        plt.figure(figsize=(16, 8))
+        plt.subplot(131)
+        plt.axis('off')
+        plt.contour(output_list[case_num, :, :, 0], color='r')
+        plt.imshow(pred[case_num, :, :, 0], cmap='gray')
+
+        plt.subplot(132)
+        plt.axis('off')
+        plt.contour(output_list[case_num, :, :, 0], color='r')
+        plt.imshow(merged_pred, cmap='gray')
+
+        plt.subplot(133)
+        plt.axis('off')
+        plt.contour(output_list[case_num, :, :, 0], color='r')
+        plt.imshow(merged_median_pred, cmap='gray')
+
+        if save_path:
+            sub_save_path = os.path.join(save_path, 'result_merged_label', str(case_num)+'.jpg')
+            plt.savefig(sub_save_path)
+            plt.close()
+
+        if show_pixls:
+            pred_pixls = np.unique(merged_pred)
+            print("name:{},     pred pixls:{}".format(case_list[case_num], pred_pixls))
+
+
+MergeLabel(save_path)
+
+
+# data_path = r'D:\data\GleasonChallenge2019\Merged_512\Test\slide006_core114.h5'
+# with h5py.File(data_path, 'r') as file:
+#     image = np.asarray(file['input_0'], dtype=np.float32)
+#     label = np.asarray(file['output_0'], dtype=np.uint8)
+#     plt.contour(label[:, :, 0], colors='r')
+#     plt.imshow(image[:, :, 0], cmap='gray')
+#     plt.show()
+
