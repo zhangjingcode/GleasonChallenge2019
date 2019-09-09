@@ -101,11 +101,47 @@ def GenerationH5(core_img_folder, store_folder):
             MergeAnnotation(sub_file_path,
                             CheckSingleCase(sub_file_path, GetAllAnnotationImgPath(r'W:\MRIData\OpenData\Gleason2019')),
                             store_path=store_folder, show=False)
-# CheckSingleCase('slide001_core003', GetAllAnnotationImgPath(r'W:\MRIData\OpenData\Gleason2019'))
-# core_img_path = r'W:\MRIData\OpenData\Gleason2019\Train Imgs\slide002_core041.jpg'
-# MergeAnnotation(core_img_path,
-#                 CheckSingleCase(core_img_path, GetAllAnnotationImgPath(r'W:\MRIData\OpenData\Gleason2019')), show=True,
-#                 store_path=r'C:\Users\zj\Desktop\word_and_ppt\GleasonChallenge\OneHotVote')
 
-GenerationH5(r'W:\MRIData\OpenData\Gleason2019\Train Imgs',
-             r'V:\PrcoessedData\Challenge_Gleason2019\ProcessedH5_voted_10down\all_data')
+def CheckOneMergedH5():
+    from CustomerPath import one_h5_predict_path
+    from MeDIT.SaveAndLoad import LoadH5
+    # with open(one_h5_predict_path, 'rb') as file:
+    #     f = h5py.File(file)
+    #     print(f.keys())
+    #
+    # data = LoadH5(one_h5_merged_file_path, tag='input_0', read_model='r')
+    label = LoadH5(one_h5_predict_path, tag='output_0', read_model='r')
+    predict = LoadH5(one_h5_predict_path, tag='predict_0', read_model='r')
+
+    show_label = np.argmax(label, axis=-1).astype(float)
+    show_predict = np.argmax(predict, axis=-1).astype(float)
+
+    from scipy import signal
+    kernel_size = (25, 25)
+    filted_label = signal.medfilt2d(show_label, kernel_size=kernel_size)
+    filted_predict = signal.medfilt2d(show_predict, kernel_size=kernel_size)
+
+    import matplotlib.pyplot as plt
+    plt.subplot(221)
+    plt.imshow(show_label, vmax=5, vmin=0, cmap='jet')
+    plt.title('Merged Label')
+    plt.colorbar()
+    plt.subplot(222)
+    plt.imshow(filted_label, vmax=5, vmin=0, cmap='jet')
+    plt.title('Fitered Label {}'.format(kernel_size))
+    plt.colorbar()
+    plt.subplot(223)
+    plt.imshow(show_predict, vmax=5, vmin=0, cmap='jet')
+    plt.title('Merged predict')
+    plt.colorbar()
+    plt.subplot(224)
+    plt.imshow(filted_predict, vmax=5, vmin=0, cmap='jet')
+    plt.title('Fitered predict {}'.format(kernel_size))
+    plt.colorbar()
+    plt.show()
+
+
+
+
+
+
