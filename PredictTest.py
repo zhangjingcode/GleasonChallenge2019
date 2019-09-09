@@ -117,13 +117,13 @@ def ShowPred(output_list, save_path=''):
 def SavePredH5(input, output, save_path=''):
     pred = np.load(os.path.join(save_path, 'prediction_test.npy'))
     for case_num in range(output.shape[0]):
-        label_name = 'date' + str(case_num) + '.h5'
-        data_path = os.path.join(save_path, 'LabelH5', label_name)
+        label_name = 'data' + str(case_num) + '.h5'
+        data_path = os.path.join(save_path, 'PredictH5', label_name)
         with h5py.File(data_path, 'w') as f:
             f['input_0'] = input[case_num, :]
             f['output_0'] = output[case_num, :]
             f['predict_0'] = pred[case_num, :]
-
+# SavePredH5(input_list, output_list, save_path)
 
 def MergeOnePred(one_label):
     merged_one_label = np.zeros(shape=(one_label.shape[0], one_label.shape[1]), dtype=np.float32)
@@ -195,14 +195,15 @@ def MergeLabel(save_path, show_pixls=False):
             print("name:{},     pred pixls:{}".format(case_list[case_num], pred_pixls))
 
 
-MergeLabel(save_path)
+# MergeLabel(save_path)
 
 
-# data_path = r'D:\data\GleasonChallenge2019\Merged_512\Test\slide006_core114.h5'
-# with h5py.File(data_path, 'r') as file:
-#     image = np.asarray(file['input_0'], dtype=np.float32)
-#     label = np.asarray(file['output_0'], dtype=np.uint8)
-#     plt.contour(label[:, :, 0], colors='r')
-#     plt.imshow(image[:, :, 0], cmap='gray')
-#     plt.show()
+data_path = r'D:\data\GleasonChallenge2019\Merged_512\model\PredictH5\data10.h5'
+with h5py.File(data_path, 'r') as file:
+    image = np.asarray(file['input_0'], dtype=np.float32)
+    label = np.asarray(file['output_0'], dtype=np.uint8)
+    predict = np.asarray(file['predict_0'], dtype=np.float32)
+    plt.contour(label[:, :, 0], colors='r')
+    plt.imshow(predict[:, :, 0], cmap='gray')
+    plt.show()
 
