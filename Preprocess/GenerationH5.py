@@ -5,9 +5,9 @@ import os
 import numpy as np
 
 # from CustomerPath import core_img_path, annotation_img_path, store_path
-from .Utility.ReadAndSave import ReadLabelingImg, ReadCoreImg
-from .Utility.Visulization import ShowH5
-from .Utility.ArrayProcess import OneHot
+from Utility.ReadAndSave import ReadLabelingImg, ReadCoreImg
+from Utility.Visulization import ShowH5
+from Utility.ArrayProcess import OneHot
 
 
 
