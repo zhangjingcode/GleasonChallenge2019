@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import h5py
 from collections import Counter
 
-from .ArrayProcess import SeparateLabel
+from ArrayProcess import SeparateLabel
 
 def MarginPlot(core_img_array='', annotation_img_array='', title='', show=False):
     """
@@ -52,7 +52,7 @@ def MarginPlot(core_img_array='', annotation_img_array='', title='', show=False)
     return ax
 
 
-def ShowOneHot(core_img_array, modal_merged_annotation_array, store_path='', title='',show=True):
+def ShowOneHot(core_img_array, modal_merged_annotation_array, vim=0, color_map='jet', store_path='', title='',show=True):
     plt.figure(figsize=(16, 8))
     plt.subplots_adjust(wspace=0.35, hspace=0.35)
     plt.suptitle(title)
@@ -74,42 +74,42 @@ def ShowOneHot(core_img_array, modal_merged_annotation_array, store_path='', tit
     plt.title('pixel distribution of core img')
 
     plt.subplot(243)
-    sc = plt.imshow(modal_merged_annotation_array[:, :, 0], vmin=0, vmax=1, cmap='jet')
+    sc = plt.imshow(modal_merged_annotation_array[:, :, 0], vmin=vim, vmax=1, cmap=color_map)
     plt.colorbar(sc)
     plt.title('output_0 ' + '\n' + str(modal_merged_annotation_array.shape) + '\n' + '000000')
     plt.xticks([])
     plt.yticks([])
 
     plt.subplot(244)
-    sc = plt.imshow(modal_merged_annotation_array[:, :, 1], vmin=0, vmax=1, cmap='jet')
+    sc = plt.imshow(modal_merged_annotation_array[:, :, 1], vmin=vim, vmax=1, cmap=color_map)
     plt.colorbar(sc)
     plt.title('output_0 ' + '\n' + str(modal_merged_annotation_array.shape) + '\n' + '010000')
     plt.xticks([])
     plt.yticks([])
 
     plt.subplot(245)
-    sc = plt.imshow(modal_merged_annotation_array[:, :, 2], vmin=0, vmax=1, cmap='jet')
+    sc = plt.imshow(modal_merged_annotation_array[:, :, 2], vmin=vim, vmax=1, cmap=color_map)
     plt.colorbar(sc)
     plt.title('output_0 ' + '\n' + str(modal_merged_annotation_array.shape) + '\n' + '001000')
     plt.xticks([])
     plt.yticks([])
 
     plt.subplot(246)
-    sc = plt.imshow(modal_merged_annotation_array[:, :, 3], vmin=0, vmax=1, cmap='jet')
+    sc = plt.imshow(modal_merged_annotation_array[:, :, 3], vmin=vim, vmax=1, cmap=color_map)
     plt.colorbar(sc)
     plt.title('output_0' + '\n' + str(modal_merged_annotation_array.shape) + '\n' + '000100')
     plt.xticks([])
     plt.yticks([])
 
     plt.subplot(247)
-    sc = plt.imshow(modal_merged_annotation_array[:, :, 4], vmin=0, vmax=1, cmap='jet')
+    sc = plt.imshow(modal_merged_annotation_array[:, :, 4], vmin=vim, vmax=1, cmap=color_map)
     plt.colorbar(sc)
     plt.title('output_0 ' + '\n' + str(modal_merged_annotation_array.shape) + '\n' + '000010')
     plt.xticks([])
     plt.yticks([])
 
     plt.subplot(248)
-    sc = plt.imshow(modal_merged_annotation_array[:, :, 5], vmin=0, vmax=1, cmap='jet')
+    sc = plt.imshow(modal_merged_annotation_array[:, :, 5], vmin=vim, vmax=1, cmap=color_map)
     plt.colorbar(sc)
     plt.title('output_0 ' + '\n' + str(modal_merged_annotation_array.shape) + '\n' + '000001')
     plt.xticks([])
@@ -125,11 +125,27 @@ def ShowOneHot(core_img_array, modal_merged_annotation_array, store_path='', tit
 
 def ShowH5(h5_file_path,store_path='', show=True):
     with h5py.File(h5_file_path, 'r') as target_h5_file:
+        keys_index = list(target_h5_file.keys())
         core_img_array = target_h5_file['input_0'].value
         annotation_array = target_h5_file['output_0'].value
 
-    ShowOneHot(core_img_array, annotation_array, store_path=store_path, show=show, title=os.path.split(h5_file_path)[-1])
+    ShowOneHot(core_img_array, annotation_array, store_path=store_path, show=show,
+               vim=-1, color_map='cool',title=os.path.split(h5_file_path)[-1])
 
+
+def ShowPredictH5(h5_file_path, store_path='', show=True):
+    with h5py.File(h5_file_path, 'r') as target_h5_file:
+
+        core_img_array = target_h5_file['input_0'].value
+        annotation_array = target_h5_file['output_0'].value
+        predict_img_array = target_h5_file['predict_0'].value
+
+    # ShowOneHot(core_img_array, annotation_array, store_path=store_path, show=show,
+    #            title=os.path.split(h5_file_path)[-1])
+    ShowOneHot(core_img_array, predict_img_array-annotation_array,
+               vim=-1, color_map='jet',
+               store_path=store_path, show=show,
+               title=os.path.split(h5_file_path)[-1]+' Predict - Core')
 def main():
     from ReadAndSave import ReadLabelingImg
     #
@@ -138,7 +154,9 @@ def main():
     #
     # MarginPlot(annotation_img_array=annotation_array, title='Maps2_T\slide002_core041', show=True)
 
-    ShowH5(r'C:\Users\zj\Desktop\word_and_ppt\GleasonChallenge\OneHotVote\slide002_core041.h5')
-
+    # ShowH5(r'C:\Users\zj\Desktop\word_and_ppt\GleasonChallenge\OneHotVote\slide002_core041.h5')
+    pred_path = r'C:\Users\zj\Desktop\word_and_ppt\GleasonChallenge\OneHotVote\transfer\PredictH5'
+    for index in os.listdir(pred_path):
+        ShowPredictH5(os.path.join(pred_path, index))
 if __name__ == "__main__":
     main()
