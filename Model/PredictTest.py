@@ -10,7 +10,7 @@ from CustomerPath import model_path, testing_folder, save_path
 from CNNModel.Training.Generate import ImageInImageOut2DTest
 
 
-input_shape = [496, 496, 3]
+input_shape = [448, 448, 3]
 batch_size = 4
 
 
@@ -21,6 +21,7 @@ def LoadTest(testing_folder, input_shape):
 
 
 input_list, output_list, case_list = LoadTest(testing_folder, input_shape)
+print()
 
 
 def SavePredict(model_path, input_list, save_path, batch_size):
@@ -197,13 +198,43 @@ def MergeLabel(save_path, show_pixls=False):
 
 # MergeLabel(save_path)
 
+def OneGleasonScore_Projection(one_label):
+    from collections import Counter
+    one_label = MergeOnePred(one_label)
+    merged_median_pred = signal.medfilt(one_label, 15)
+    pixel_count = dict(Counter(merged_median_pred.flatten()))
+    score = sorted(pixel_count.items(), key=lambda x: x[1])
+    print(score)
 
-data_path = r'D:\data\GleasonChallenge2019\Merged_512\model\PredictH5\data10.h5'
-with h5py.File(data_path, 'r') as file:
-    image = np.asarray(file['input_0'], dtype=np.float32)
-    label = np.asarray(file['output_0'], dtype=np.uint8)
-    predict = np.asarray(file['predict_0'], dtype=np.float32)
-    plt.contour(label[:, :, 0], colors='r')
-    plt.imshow(predict[:, :, 0], cmap='gray')
-    plt.show()
 
+def OneGleasonScore_AllProbability(one_label):
+    pixel_count = {}
+    for index in range(one_label.shape[-1]):
+        pixel_num = np.sum(one_label[:, :, index])
+        if index > 1:
+            pixel_count[index + 1] = pixel_num
+        else:
+            pixel_count[index] = pixel_num
+    score = sorted(pixel_count.items(), key=lambda x: x[1])
+    print(score)
+
+
+def OneGleasonScore_probability(one_label, threshold):
+    pixel_count = {}
+    for index in range(one_label.shape[-1]):
+        pixel_num = np.sum(one_label[:, :, index][one_label[:, :, index] > threshold])
+        if index > 1:
+            pixel_count[index + 1] = pixel_num
+        else:
+            pixel_count[index] = pixel_num
+    score = sorted(pixel_count.items(), key=lambda x: x[1])
+    print(score)
+
+
+
+pred = np.load(os.path.join(save_path, 'prediction_test.npy'))
+OneGleasonScore_Projection(pred[13, :])
+
+OneGleasonScore_probability(pred[13, :], threshold=0.5)
+
+OneGleasonScore_probability(pred[13, :], threshold=0.75)
