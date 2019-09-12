@@ -20,8 +20,8 @@ def LoadTest(testing_folder, input_shape):
     return input_list, output_list, case_list
 
 
-input_list, output_list, case_list = LoadTest(testing_folder, input_shape)
-print()
+# input_list, output_list, case_list = LoadTest(testing_folder, input_shape)
+# print()
 
 
 def SavePredict(model_path, input_list, save_path, batch_size):
@@ -125,6 +125,7 @@ def SavePredH5(input, output, save_path=''):
             f['output_0'] = output[case_num, :]
             f['predict_0'] = pred[case_num, :]
 # SavePredH5(input_list, output_list, save_path)
+
 
 def MergeOnePred(one_label):
     merged_one_label = np.zeros(shape=(one_label.shape[0], one_label.shape[1]), dtype=np.float32)
@@ -232,9 +233,9 @@ def OneGleasonScore_probability(one_label, threshold):
 
 
 
-pred = np.load(os.path.join(save_path, 'prediction_test.npy'))
-OneGleasonScore_Projection(pred[13, :])
-
-OneGleasonScore_probability(pred[13, :], threshold=0.5)
-
-OneGleasonScore_probability(pred[13, :], threshold=0.75)
+# pred = np.load(os.path.join(save_path, 'prediction_test.npy'))
+# OneGleasonScore_Projection(pred[13, :])
+#
+# OneGleasonScore_probability(pred[13, :], threshold=0.5)
+#
+# OneGleasonScore_probability(pred[13, :], threshold=0.75)

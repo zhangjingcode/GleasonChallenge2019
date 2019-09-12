@@ -1,9 +1,3 @@
-import os
-
-import matplotlib.pyplot as plt
-
-from Generate import ImageInImageOut2D
-from MeDIT.DataAugmentor import random_2d_augment
 from keras.callbacks import ModelCheckpoint, EarlyStopping, ReduceLROnPlateau
 from keras.optimizers import Adam
 import os
@@ -22,7 +16,7 @@ train_generator = ImageInImageOut2D(train_folder, (496, 496), batch_size=batch_s
 validation_generator = ImageInImageOut2D(validation_folder, (496, 496), batch_size=batch_size, augment_param=random_2d_augment)
 
 # Model
-from UNet import UNet
+from Model.UNet import UNet
 from saveandload import SaveModel
 
 model = UNet(input_shape, channel=6)
