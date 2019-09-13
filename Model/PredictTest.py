@@ -4,10 +4,9 @@ import numpy as np
 import h5py
 
 import matplotlib.pyplot as plt
-import scipy.signal as signal
 
 from CustomerPath import model_path, testing_folder, save_path
-from CNNModel.Training.Generate import ImageInImageOut2DTest
+from GleasonChallenge2019.Model.Generator import ImageIn2DTest
 
 
 input_shape = [448, 448, 3]
@@ -16,12 +15,12 @@ batch_size = 4
 
 def LoadTest(testing_folder, input_shape):
 
-    input_list, output_list, case_list = ImageInImageOut2DTest(testing_folder, input_shape=input_shape)
-    return input_list, output_list, case_list
+    input_list, shape_list, case_list = ImageIn2DTest(testing_folder, input_shape=input_shape)
+    return input_list, shape_list, case_list
 
 
-# input_list, output_list, case_list = LoadTest(testing_folder, input_shape)
-# print()
+input_list, shape, case_list = LoadTest(testing_folder, input_shape)
+# print(shape)
 
 
 def SavePredict(model_path, input_list, save_path, batch_size):
@@ -41,7 +40,7 @@ def ShowPred(output_list, save_path=''):
     for case_num in range(output_list.shape[0]):
 
         plt.figure(figsize=(16, 8))
-        plt.margins(0.2,0.2)
+        plt.margins(0.2, 0.2)
         plt.suptitle(str(case_num))
         plt.subplot(231)
         plt.contour(output_list[case_num, :, :, 0], colors='r')
@@ -115,127 +114,98 @@ def ShowPred(output_list, save_path=''):
 # plt.savefig(os.path.join(os.path.split(model_path)[0], 'ROC.png'))
 
 
-def SavePredH5(input, output, save_path=''):
+def ShowTestPred(save_path=''):
+
     pred = np.load(os.path.join(save_path, 'prediction_test.npy'))
-    for case_num in range(output.shape[0]):
-        label_name = 'data' + str(case_num) + '.h5'
-        data_path = os.path.join(save_path, 'PredictH5', label_name)
-        with h5py.File(data_path, 'w') as f:
-            f['input_0'] = input[case_num, :]
-            f['output_0'] = output[case_num, :]
-            f['predict_0'] = pred[case_num, :]
-# SavePredH5(input_list, output_list, save_path)
 
-
-def MergeOnePred(one_label):
-    merged_one_label = np.zeros(shape=(one_label.shape[0], one_label.shape[1]), dtype=np.float32)
-    for raw in range(one_label.shape[0]):
-        for colunms in range(one_label.shape[1]):
-            index = np.argmax(one_label[raw, colunms])
-            if index > 1:
-                merged_one_label[raw, colunms] = index + 1
-            else:
-                merged_one_label[raw, colunms] = index
-
-    return merged_one_label
-
-
-def TestMergeOnePred():
-    pred = np.load(os.path.join(save_path, 'prediction_test.npy'))
-    one_label = output_list[0, :]
-    one_predict = pred[0, :]
-    merged_predict = MergeOnePred(one_predict)
-
-
-    # array_median = cv2.medianBlur(merged_predict, 5)
-    plt.subplot(121)
-    plt.contour(one_label[:, :, 0], colors='r')
-    plt.imshow(one_predict[:, :, 0], cmap='gray')
-    plt.subplot(122)
-    plt.contour(one_label[:, :, 0], colors='r')
-    plt.imshow(merged_predict[:, :, 0], cmap='gray')
-
-    plt.show()
-
-
-# TestMergeOnePred()
-
-def MergeLabel(save_path, show_pixls=False):
-    pred = np.load(os.path.join(save_path, 'prediction_test.npy'))
-    print()
     for case_num in range(pred.shape[0]):
 
-        merged_pred = MergeOnePred(pred[case_num, :])
-
-
-        # 中值滤波
-        merged_median_pred = signal.medfilt(merged_pred, 15)
-
         plt.figure(figsize=(16, 8))
-        plt.subplot(131)
-        plt.axis('off')
-        plt.contour(output_list[case_num, :, :, 0], color='r')
+        plt.margins(0.2, 0.2)
+        plt.suptitle(str(case_num))
+        plt.subplot(231)
         plt.imshow(pred[case_num, :, :, 0], cmap='gray')
+        plt.xticks([])
+        plt.yticks([])
+        plt.colorbar()
+        plt.title('OneHot 100000')
+        plt.plot(0, 0, '-', color='r', label='Annotation')
+        plt.legend()
 
-        plt.subplot(132)
-        plt.axis('off')
-        plt.contour(output_list[case_num, :, :, 0], color='r')
-        plt.imshow(merged_pred, cmap='gray')
+        plt.subplot(232)
+        plt.imshow(pred[case_num, :, :, 1], cmap='gray')
+        plt.xticks([])
+        plt.yticks([])
+        plt.colorbar()
+        plt.title('OneHot 010000')
+        plt.plot(0, 0, '-', color='r', label='Annotation')
+        plt.legend()
 
-        plt.subplot(133)
-        plt.axis('off')
-        plt.contour(output_list[case_num, :, :, 0], color='r')
-        plt.imshow(merged_median_pred, cmap='gray')
+        plt.subplot(233)
+        plt.imshow(pred[case_num, :, :, 2], cmap='gray')
+        plt.xticks([])
+        plt.yticks([])
+        plt.colorbar()
+        plt.title('OneHot 001000')
+        plt.plot(0, 0, '-', color='r', label='Annotation')
+        plt.legend()
+
+        plt.subplot(234)
+        plt.imshow(pred[case_num, :, :, 3], cmap='gray')
+        plt.xticks([])
+        plt.yticks([])
+        plt.colorbar()
+        plt.title('OneHot 000100')
+        plt.plot(0, 0, '-', color='r', label='Annotation')
+        plt.legend()
+
+        plt.subplot(235)
+        plt.imshow(pred[case_num, :, :, 4], cmap='gray', vmin=0.0, vmax=1.0)
+        plt.xticks([])
+        plt.yticks([])
+        plt.colorbar()
+        plt.title('OneHot 000010')
+        plt.plot(0, 0, '-', color='r', label='Annotation')
+        plt.legend()
+
+        plt.subplot(236)
+        plt.imshow(pred[case_num, :, :, 5], cmap='gray')
+        plt.xticks([])
+        plt.yticks([])
+        plt.colorbar()
+        plt.title('OneHot 000001')
+        plt.plot(0, 0, '-', color='r', label='Annotation')
+        plt.legend()
+
 
         if save_path:
-            sub_save_path = os.path.join(save_path, 'result_merged_label', str(case_num)+'.jpg')
+            sub_save_path = os.path.join(save_path, 'result', str(case_num)+'.jpg')
             plt.savefig(sub_save_path)
             plt.close()
 
-        if show_pixls:
-            pred_pixls = np.unique(merged_pred)
-            print("name:{},     pred pixls:{}".format(case_list[case_num], pred_pixls))
+
+# ShowTestPred(save_path)
 
 
-# MergeLabel(save_path)
-
-def OneGleasonScore_Projection(one_label):
-    from collections import Counter
-    one_label = MergeOnePred(one_label)
-    merged_median_pred = signal.medfilt(one_label, 15)
-    pixel_count = dict(Counter(merged_median_pred.flatten()))
-    score = sorted(pixel_count.items(), key=lambda x: x[1])
-    print(score)
+def SavePredH5(input, save_path=''):
+    from GleasonChallenge2019.Model.Dice import Projection
+    pred = np.load(os.path.join(save_path, 'prediction_test.npy'))
+    for case_num in range(input.shape[0]):
+        label_name = case_list[case_num]
+        data_path = os.path.join(save_path, 'ProjectPredictH5', label_name)
 
 
-def OneGleasonScore_AllProbability(one_label):
-    pixel_count = {}
-    for index in range(one_label.shape[-1]):
-        pixel_num = np.sum(one_label[:, :, index])
-        if index > 1:
-            pixel_count[index + 1] = pixel_num
-        else:
-            pixel_count[index] = pixel_num
-    score = sorted(pixel_count.items(), key=lambda x: x[1])
-    print(score)
+        project_pred = Projection(pred[case_num, :])
 
-
-def OneGleasonScore_probability(one_label, threshold):
-    pixel_count = {}
-    for index in range(one_label.shape[-1]):
-        pixel_num = np.sum(one_label[:, :, index][one_label[:, :, index] > threshold])
-        if index > 1:
-            pixel_count[index + 1] = pixel_num
-        else:
-            pixel_count[index] = pixel_num
-    score = sorted(pixel_count.items(), key=lambda x: x[1])
-    print(score)
+        with h5py.File(data_path, 'w') as f:
+            f['input_0'] = input[case_num, :]
+            f['predict_0'] = project_pred
+# SavePredH5(input_list, save_path)
 
 
 
-# pred = np.load(os.path.join(save_path, 'prediction_test.npy'))
-# OneGleasonScore_Projection(pred[13, :])
-#
-# OneGleasonScore_probability(pred[13, :], threshold=0.5)
-#
-# OneGleasonScore_probability(pred[13, :], threshold=0.75)
+
+
+
+
+
