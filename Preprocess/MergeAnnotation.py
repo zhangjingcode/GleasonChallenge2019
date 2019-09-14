@@ -6,9 +6,9 @@ import pandas as pd
 import cv2
 import h5py
 
-from Utility.ReadAndSave import ReadCoreImg, ReadLabelingImg
-from Utility.ArrayProcess import OneHot
-from Utility.Visulization import ShowOneHot,ShowH5
+from GleasonChallenge2019.Utility.ReadAndSave import ReadCoreImg, ReadLabelingImg
+from GleasonChallenge2019.Utility.ArrayProcess import OneHot
+from GleasonChallenge2019.Utility.Visulization import ShowOneHot,ShowH5
 from MeDIT.SaveAndLoad import SaveH5
 
 def GetAllCoreImgPath(core_img_folder):
@@ -41,8 +41,10 @@ def MergeAnnotation(core_img_path, annotation_img_path_list, store_path='', show
     # TODO: 1. 固定横纵比，2. 先One-hot编码，再进行Voting
     core_img_array, case_name = ReadCoreImg(core_img_path)
 
-    col = core_img_array.shape[1]
-    row = core_img_array.shape[0]
+    # col = core_img_array.shape[1]
+    # row = core_img_array.shape[0]
+    col = 5120
+    row = 5120
 
 
     core_img_array = cv2.resize(core_img_array, (col//10, row//10), interpolation=cv2.INTER_CUBIC)
@@ -50,7 +52,7 @@ def MergeAnnotation(core_img_path, annotation_img_path_list, store_path='', show
 
     merged_annotation_array = np.zeros((core_img_array.shape[0], core_img_array.shape[1], 6, len(annotation_img_path_list)))
     for annotation_index in range(len(annotation_img_path_list)):
-        annotation_img_array, pathologist_num = ReadLabelingImg(annotation_img_path_list[annotation_index])
+        annotation_img_array, pathologist_num = ReadLabelingImg(annotation_img_path_list[annotation_index], 2)
         annotation_img_array = cv2.resize(cv2.resize(annotation_img_array, (col//10, row//10), interpolation=cv2.INTER_NEAREST),
                                           (col//10, row//10), interpolation=cv2.INTER_NEAREST)
 
@@ -99,7 +101,7 @@ def GenerationH5(core_img_folder, store_folder):
             print(sub_file_path)
 
             MergeAnnotation(sub_file_path,
-                            CheckSingleCase(sub_file_path, GetAllAnnotationImgPath(r'W:\MRIData\OpenData\Gleason2019')),
+                            CheckSingleCase(sub_file_path, GetAllAnnotationImgPath(r'D:\Gleason2019')),
                             store_path=store_folder, show=False)
 
 def CheckOneMergedH5():
@@ -141,4 +143,8 @@ def CheckOneMergedH5():
     plt.show()
 
 
+def main():
+    GenerationH5(r'D:\Gleason2019\Train Imgs', r'W:\PrcoessedData\Challenge_Gleason2019\ProcessedH5_voted_512\train_all_data')
 
+if __name__ == '__main__':
+    main()

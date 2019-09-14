@@ -30,7 +30,7 @@ def ReadCoreImg(core_img_path):
     return core_img_array, case_name
 
 
-def ReadLabelingImg(annotation_img_path):
+def ReadLabelingImg(annotation_img_path, annotation_index):
 
     """
     Read pathologist annotation img by cv2
@@ -40,7 +40,7 @@ def ReadLabelingImg(annotation_img_path):
     annotation_img_array = cv2.imread(annotation_img_path)
 
     # read case information
-    pathologist_num = annotation_img_path.split('\\')[4]
+    pathologist_num = annotation_img_path.split('\\')[annotation_index]
 
     return annotation_img_array[:, :, 0], pathologist_num
 

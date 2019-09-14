@@ -15,8 +15,10 @@ def SingleCaseGeneration(core_img_path, store_path):
     core_img_array, case_name = ReadCoreImg(core_img_path)
 
 
-    col = core_img_array.shape[1]
-    row = core_img_array.shape[0]
+    # col = core_img_array.shape[1]
+    # row = core_img_array.shape[0]
+    col = 5120
+    row = 5120
 
     downsampled_core_img_array = cv2.resize(core_img_array, (col//10, row//10), interpolation=cv2.INTER_NEAREST)
 
