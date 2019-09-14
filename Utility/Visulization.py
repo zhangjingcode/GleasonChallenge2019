@@ -1,10 +1,12 @@
 import os
+import copy
 
 import matplotlib.pyplot as plt
 import h5py
+import numpy as np
 from collections import Counter
 
-from ArrayProcess import SeparateLabel
+from ArrayProcess import SeparateLabel, OneHot
 
 def MarginPlot(core_img_array='', annotation_img_array='', title='', show=False):
     """
@@ -146,6 +148,25 @@ def ShowPredictH5(h5_file_path, store_path='', show=True):
                vim=-1, color_map='jet',
                store_path=store_path, show=show,
                title=os.path.split(h5_file_path)[-1]+' Predict - Core')
+
+def ShowTestH5(test_h5_path):
+    with h5py.File(test_h5_path, 'r') as target_h5_file:
+        keys_index = list(target_h5_file.keys())
+        core_img_array = target_h5_file['input_0'].value
+        predict_array = target_h5_file['predict_0'].value
+
+    one_hot_index = np.argmax(predict_array, axis=2)
+    one_hot_dict = [0, 1, 3, 4, 5, 6]
+    final_array = copy.deepcopy(one_hot_index)
+    final_array[np.where(one_hot_index > 1)] = one_hot_index[np.where(one_hot_index > 1)] + 1
+
+    final_one_hot_array = OneHot(final_array)
+
+
+    return core_img_array, predict_array, final_array, final_one_hot_array
+
+
+
 def main():
     from ReadAndSave import ReadLabelingImg
     #
@@ -154,9 +175,12 @@ def main():
     #
     # MarginPlot(annotation_img_array=annotation_array, title='Maps2_T\slide002_core041', show=True)
 
-    # ShowH5(r'C:\Users\zj\Desktop\word_and_ppt\GleasonChallenge\OneHotVote\slide002_core041.h5')
-    pred_path = r'C:\Users\zj\Desktop\word_and_ppt\GleasonChallenge\OneHotVote\transfer\PredictH5'
-    for index in os.listdir(pred_path):
-        ShowPredictH5(os.path.join(pred_path, index))
+    test_h5_path= r'G:\GleasonChallenge2019\ProjectPredictH5\slide001_core015_.h5'
+    core_img_array, predict_array, final_array,final_one_hot_array = ShowTestH5(test_h5_path)
+    ShowOneHot(core_img_array, final_one_hot_array)
+    # MarginPlot(core_img_array=core_img_array, annotation_img_array=final_array, show=True)
+    # pred_path = r'C:\Users\zj\Desktop\word_and_ppt\GleasonChallenge\OneHotVote\transfer\PredictH5'
+    # for index in os.listdir(pred_path):
+    #     ShowPredictH5(os.path.join(pred_path, index))
 if __name__ == "__main__":
     main()

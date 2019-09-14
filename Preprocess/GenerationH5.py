@@ -72,4 +72,4 @@ if __name__ == '__main__':
      main()
 
 
-# ItrationCheck(r'D:\Gleason2019\TrainValidationTest_256\Test', r'D:\Gleason2019\TrainValidationTest_256\DataSetShow\Test')
+
