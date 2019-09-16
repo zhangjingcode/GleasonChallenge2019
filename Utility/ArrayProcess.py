@@ -100,8 +100,6 @@ def CheckEnlargment(h5_file_path):
     import h5py
     with h5py.File(h5_file_path, 'r') as target_h5_file:
 
-        core_img_array = target_h5_file['input_0'].value
-        # annotation_array = target_h5_file['output_0'].value
         predict_img_array = target_h5_file['predict_0'].value
 
     EnlargementPatch(predict_img_array[..., 0], (512, 460))
@@ -124,17 +122,16 @@ def TestEnlarge():
         for index in range(predict.shape[-1]):
             enlarged_array, list = EnlargementPatch(predict[:, :, index], patch)
 
-            print(list)
+            print('original size:', shape_list[case_num], 'center points:', list)
             plt.imshow(enlarged_array)
             plt.axis('off')
             plt.show()
 
 
 def main():
-    h5_path = r'D:\ZYH\Data\GleasonChallenge2019\Test_h5\model\ProjectPredictH5\slide001_core015_.h5'
-    CheckEnlargment(h5_path)
+    # h5_path = r'D:\ZYH\Data\GleasonChallenge2019\Test_h5\model\ProjectPredictH5\slide001_core015_.h5'
+    TestEnlarge()
 
 if __name__ == '__main__':
     main()
-# TestEnlarge()
 

@@ -7,28 +7,13 @@ import matplotlib.pyplot as plt
 from CustomerPath import h5_folder
 from GleasonChallenge2019.Model.MergePredLabel import MergeOnePred
 
-
-def GetH5Data(data_folder):
-    file_list = os.listdir(data_folder)
-    # label_list = []
-    predict_list = []
-
-    for file in file_list:
-        file_path = os.path.join(data_folder, file)
-        with h5py.File(file_path, 'r') as f:
-            # print(f.keys())
-            # label = np.asarray(f['output_0'], dtype=float)
-            predict = np.asarray(f['predict_0'], dtype=np.float32)
-
-            # label_list.append(label)
-            predict_list.append(predict)
-
-    return np.asarray(predict_list), file_list
+from GleasonChallenge2019.Model.Generator import GetH5Data, ImageIn2DTest
+from CNNModel.Training.Generate import ImageInImageOut2D
 
 
 def Dice_Coef(y_true, y_pred):
     # parameter for loss function
-    smooth = 1
+    smooth = 1.0
     y_true_f = y_true.flatten()
     y_pred_f = y_pred.flatten()
     intersection = sum(y_true_f * y_pred_f)
@@ -52,32 +37,31 @@ def Projection(one_label):
 
 
 def ShowDice(h5_folder):
-    label_list, pred_list = GetH5Data(h5_folder)
+    label_list, pred_list, _ = GetH5Data(h5_folder)
+    dice = []
     for index in range(len(label_list)):
-        dice = []
         sum_dice = 0
-
         label = label_list[index]
         predict = pred_list[index]
-
+        one_dice = []
         for channel in range(label.shape[-1]):
-            binary_pred = Binary(predict[:, :, channel], threshold=1/6)
-            binary_label = Binary(label[:, :, channel], threshold=1/6)
-            dice.append(Dice_Coef(binary_label, binary_pred))
+            binary_pred = Binary(predict[:, :, channel], threshold=0.5)
+            binary_label = Binary(label[:, :, channel], threshold=0.5)
+            one_dice.append(Dice_Coef(binary_label, binary_pred))
 
-            plt.suptitle('One-hot ' + str(channel) + '\n' + str(Dice_Coef(binary_label, binary_pred)))
-
-            plt.subplot(121)
-            plt.title('Label')
-            plt.imshow(binary_label)
-            plt.axis('off')
-
-            plt.subplot(122)
-            plt.title('Pred')
-            plt.imshow(binary_pred)
-            plt.axis('off')
-
-            plt.show()
+            # plt.suptitle('One-hot ' + str(channel) + '\n' + str(Dice_Coef(binary_label, binary_pred)))
+            #
+            # plt.subplot(121)
+            # plt.title('Label')
+            # plt.imshow(binary_label)
+            # plt.axis('off')
+            #
+            # plt.subplot(122)
+            # plt.title('Pred')
+            # plt.imshow(binary_pred)
+            # plt.axis('off')
+            #
+            # plt.show()
 
             # save_path = r'D:\ZYH\Data\GleasonChallenge2019\Voted_10down\model\Dice'
             # sub_save_path = os.path.join(save_path, str(index))
@@ -85,16 +69,21 @@ def ShowDice(h5_folder):
             #     os.makedirs(sub_save_path)
             # image_save_path = os.path.join(sub_save_path, str(channel) + '.jpg')
             # plt.savefig(image_save_path)
-            plt.close()
-            sum_dice += sum(dice)
-        print(sum(dice))
+            # plt.close()
+        sum_dice += sum(one_dice)
+        dice.append(sum_dice/6)
+        print(index)
+    print(sum(dice)/len(label_list))
+    plt.hist(dice)
+    plt.title('dice')
+    plt.show()
 
 
-# ShowDice(r'D:\ZYH\Data\GleasonChallenge2019\Test_h5\model\TestPredictH5')
+# ShowDice(r'D:\ZYH\Data\GleasonChallenge2019\Voted_10down\transmodel\PredictH5')
 
 
-def ShowMergedDice():
-    label_list, pred_list = GetH5Data(h5_folder)
+def ShowMergedDice(h5_folder):
+    label_list, pred_list, _ = GetH5Data(h5_folder)
     for index in range(len(label_list)):
         dice = []
 
@@ -123,7 +112,7 @@ def ShowMergedDice():
         print(dice)
 
 
-# ShowMergedDice()
+# ShowMergedDice(r'D:\ZYH\Data\GleasonChallenge2019\Voted_10down\transmodel\PredictH5')
 
 
 def ShowTest(h5_folder):
@@ -153,19 +142,7 @@ def ShowTest(h5_folder):
 # ShowTest(r'D:\ZYH\Data\GleasonChallenge2019\Test_h5\transmodel\TestPredictH5')
 
 
-# def ResizeLabel(testing_folder):
-#     from GleasonChallenge2019.Model.Generator import ImageIn2DTest
-#     import cv2
-#
-#     input_shape = [448, 448, 3]
-#
-#     _, shape_list, case_list = ImageIn2DTest(testing_folder, input_shape=input_shape)
-#
-#
-#     for index in range(len(shape_list)):
-#         upsampled_annotation_img_array = cv2.resize(, (col // 10, row // 10),
-#                                                   interpolation=cv2.INTER_NEAREST)
-#
-#     return 0
+
+
 
 

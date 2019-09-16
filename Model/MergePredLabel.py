@@ -1,9 +1,11 @@
 import numpy as np
 import os
 import h5py
+import cv2
 
 import matplotlib.pyplot as plt
 import scipy.signal as signal
+from scipy import ndimage
 
 
 def MergeOnePred(one_label):
@@ -43,7 +45,10 @@ def MergeLabel(save_path, pred):
         merged_pred = MergeOnePred(pred[case_num, :])
 
         # 中值滤波
-        merged_median_pred = signal.medfilt(merged_pred, 15)
+        # merged_median_pred = signal.medfilt(merged_pred, 15)
+
+        # binary_fill_holes()
+        # merged_median_pred = FillHole_RGB(merged_pred, SavePath=False)
 
         plt.figure(figsize=(16, 8))
         plt.subplot(131)
@@ -70,3 +75,7 @@ def MergeLabel(save_path, pred):
             plt.savefig(sub_save_path)
             plt.close()
 
+
+# from GleasonChallenge2019.Model.Generator import GetH5Data
+# predict_list, _ = GetH5Data(r'D:\ZYH\Data\GleasonChallenge2019\Test_h5\model\ProjectPredictH5')
+# MergeLabel(save_path=False, pred=predict_list)
